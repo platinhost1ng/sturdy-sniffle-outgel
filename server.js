@@ -51,7 +51,10 @@ app.use(express.json());
 app.use(cors());
 app.use(express.static(publicDir));
 
-app.use(session({
+// Serve index.html for root and SPA routes
+app.get('/', (req, res) => {
+  res.sendFile('index.html', { root: publicDir });
+});
   secret: process.env.SESSION_SECRET || 'crusty_secret_key_2026',
   resave: false,
   saveUninitialized: true,
@@ -107,11 +110,6 @@ app.use((req, res, next) => {
   
   rateLimitData.count += 1;
   next();
-});
-
-// ============= ROOT ROUTE =============
-app.get('/', (req, res) => {
-  res.sendFile(path.resolve(publicDir, 'index.html'));
 });
 
 // ============= HELPER FUNCTIONS =============
