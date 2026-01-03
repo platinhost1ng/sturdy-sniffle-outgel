@@ -111,7 +111,7 @@ app.use((req, res, next) => {
 
 // ============= ROOT ROUTE =============
 app.get('/', (req, res) => {
-  res.sendFile(path.join(publicDir, 'index.html'));
+  res.sendFile(path.resolve(publicDir, 'index.html'));
 });
 
 // ============= HELPER FUNCTIONS =============
