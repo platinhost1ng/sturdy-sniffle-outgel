@@ -55,6 +55,8 @@ app.use(express.static(publicDir));
 app.get('/', (req, res) => {
   res.sendFile('index.html', { root: publicDir });
 });
+
+app.use(session({
   secret: process.env.SESSION_SECRET || 'crusty_secret_key_2026',
   resave: false,
   saveUninitialized: true,
