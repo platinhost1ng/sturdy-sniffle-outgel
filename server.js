@@ -10,9 +10,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ============= PATH CONFIGURATION =============
-const baseDir = process.env.BASE_DIR || './';
-const stealerJsonPath = process.env.STEALER_JSON_PATH || path.join(baseDir, 'stealer.json');
-const publicDir = process.env.PUBLIC_DIR || path.join(baseDir, 'public');
+const baseDir = process.env.BASE_DIR || __dirname;
+const stealerJsonPath = process.env.STEALER_JSON_PATH || path.resolve(baseDir, 'stealer.json');
+const publicDir = process.env.PUBLIC_DIR || path.resolve(baseDir, 'public');
 
 // ============= CRUSTYDB CONFIG =============
 const CRUSTYDB_URL = process.env.CRUSTYDB_URL || 's';
