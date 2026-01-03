@@ -48,7 +48,7 @@ const CRUSTY_LOGO = 'https://raw.githubusercontent.com/platinww/CrustyMain/refs/
 
 // ============= HTML TEMPLATE =============
 // PASTE YOUR HTML CODE HERE
-const HTML_TEMPLATE = `
+const HTML_TEMPLATE = String.raw`
 <!DOCTYPE html>
 <html lang="en">
 <head>
