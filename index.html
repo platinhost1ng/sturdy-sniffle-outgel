@@ -1468,26 +1468,13 @@
                 return;
             }
 
-            showAlert('generatorAlert', 'Validating webhook...', 'warning');
+            showAlert('generatorAlert', 'Generating & obfuscating...', 'warning');
 
             try {
-                const validateResponse = await fetch(`${API_BASE_URL}/api/webhook/validate/${encodeURIComponent(webhook)}`, {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-
-                const validateData = await validateResponse.json();
-
-                if (!validateData.success) {
-                    showAlert('generatorAlert', 'Webhook validation failed!', 'error');
-                    return;
-                }
-
-                showAlert('generatorAlert', 'Generating & obfuscating...', 'warning');
-
-                const generateResponse = await fetch(`${API_BASE_URL}/api/script/generate/${encodeURIComponent(webhook)}/${encodeURIComponent(game)}`, {
+                const generateResponse = await fetch(`${API_BASE_URL}/api/script/generate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ webhook, game }),
                     credentials: 'include'
                 });
 
