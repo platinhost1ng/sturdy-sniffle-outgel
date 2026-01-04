@@ -1467,7 +1467,7 @@
 
             try {
                 const validateResponse = await fetch(`${API_BASE_URL}/api/webhook/validate/${encodeURIComponent(webhook)}`, {
-                    method: 'POST',
+                    method: 'GET',
                     headers: { 'Content-Type': 'application/json' }
                 });
 
