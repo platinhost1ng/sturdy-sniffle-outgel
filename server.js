@@ -762,7 +762,10 @@ app.post('/api/script/generate/:webhook/:game', async (req, res) => {
       return res.status(401).json({ success: false, message: 'Login required' });
     }
 
-    const { webhook, game } = req.params;
+    const { webhook: encodedWebhook, game: encodedGame } = req.params;
+    const webhook = decodeURIComponent(encodedWebhook);
+    const game = decodeURIComponent(encodedGame);
+    
     console.log('🎯 Webhook:', webhook?.substring(0, 50) + '...');
     console.log('🎮 Game:', game);
 
