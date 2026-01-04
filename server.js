@@ -646,9 +646,9 @@ app.post('/api/auth/logout', (req, res) => {
   res.json({ success: true, message: 'Logged out' });
 });
 
-app.get('/api/webhook/validate/:webhook', async (req, res) => {
+app.post('/api/webhook/validate', async (req, res) => {
   try {
-    const { webhook } = req.params;
+    const { webhook } = req.body;
 
     if (!webhook) {
       return res.status(400).json({ success: false, message: 'Webhook URL required' });
