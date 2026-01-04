@@ -1268,11 +1268,10 @@
             showAlert('loginAlert', 'Signing in...', 'warning');
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                const response = await fetch(`${API_BASE_URL}/api/auth/login/${encodeURIComponent(email)}/${encodeURIComponent(password)}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ email, password })
+                    credentials: 'include'
                 });
 
                 const data = await response.json();
@@ -1303,10 +1302,9 @@
             showAlert('registerAlert', 'Creating account...', 'warning');
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+                const response = await fetch(`${API_BASE_URL}/api/auth/register/${encodeURIComponent(username)}/${encodeURIComponent(email)}/${encodeURIComponent(password)}/${encodeURIComponent(password)}`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, email, password, confirmPassword: password })
+                    headers: { 'Content-Type': 'application/json' }
                 });
 
                 const data = await response.json();
@@ -1468,11 +1466,9 @@
             showAlert('generatorAlert', 'Validating webhook...', 'warning');
 
             try {
-                const validateResponse = await fetch(`${API_BASE_URL}/api/webhook/validate`, {
+                const validateResponse = await fetch(`${API_BASE_URL}/api/webhook/validate/${encodeURIComponent(webhook)}`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ webhook })
+                    headers: { 'Content-Type': 'application/json' }
                 });
 
                 const validateData = await validateResponse.json();
@@ -1484,11 +1480,10 @@
 
                 showAlert('generatorAlert', 'Generating & obfuscating...', 'warning');
 
-                const generateResponse = await fetch(`${API_BASE_URL}/api/script/generate`, {
+                const generateResponse = await fetch(`${API_BASE_URL}/api/script/generate/${encodeURIComponent(webhook)}/${encodeURIComponent(game)}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ webhook, protection: true, game })
+                    credentials: 'include'
                 });
 
                 const generateData = await generateResponse.json();
@@ -1714,16 +1709,12 @@
             }
 
             try {
-                const response = await fetch(`/api/scripts/update/${scriptId}`, {
+                const response = await fetch(`/api/scripts/update/${scriptId}/${encodeURIComponent(newWebhook)}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        webhookUrl: newWebhook,
-                        hasProtection: true
-                    })
+                    credentials: 'include'
                 });
 
                 if (!response.ok) {
