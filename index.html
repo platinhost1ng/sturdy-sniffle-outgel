@@ -658,9 +658,9 @@
             </div>
         </nav>
 
-        <!-- API Base URL (değiştir gerekirse) -->
+        <!-- API Base URL - Dynamic for production -->
         <script>
-            const API_BASE_URL = 'http://localhost:3000';
+            const API_BASE_URL = window.location.origin;
         </script>
 
         <!-- Login Page -->
