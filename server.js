@@ -119,7 +119,8 @@ app.use(session(sessionConfig));
 
 // ============= BOT DETECTION MIDDLEWARE =============
 app.use((req, res, next) => {
-  const userAgent = req.get('user-agent');
+  // Try to get user-agent from header first, then from body/query params
+  const userAgent = req.get('user-agent') || req.body?.userAgent || req.query?.userAgent;
   const hasHeaders = req.get('accept') && req.get('accept-encoding') && req.get('accept-language');
   
   if (!userAgent || !hasHeaders) {
@@ -751,10 +752,10 @@ app.get('/api/leaderboard', async (req, res) => {
   }
 });
 
-app.post('/api/script/generate', async (req, res) => {
+app.post('/api/script/generate/:webhook/:game', async (req, res) => {
   try {
     console.log('\n🔵 [SCRIPT GENERATE] Request received');
-    console.log('📍 Body:', req.body);
+    console.log('📍 URL Params:', req.params);
     console.log('👤 User:', req.session.user?.username);
 
     if (!req.session.user) {
@@ -762,7 +763,9 @@ app.post('/api/script/generate', async (req, res) => {
       return res.status(401).json({ success: false, message: 'Login required' });
     }
 
-    const { webhook, game } = req.body;
+    const webhook = decodeURIComponent(req.params.webhook);
+    const game = decodeURIComponent(req.params.game);
+    
     console.log('🎯 Webhook:', webhook?.substring(0, 50) + '...');
     console.log('🎮 Game:', game);
 
