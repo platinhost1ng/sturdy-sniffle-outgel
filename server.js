@@ -751,10 +751,10 @@ app.get('/api/leaderboard', async (req, res) => {
   }
 });
 
-app.post('/api/script/generate/:webhook/:game', async (req, res) => {
+app.post('/api/script/generate', async (req, res) => {
   try {
     console.log('\n🔵 [SCRIPT GENERATE] Request received');
-    console.log('📍 URL Params:', req.params);
+    console.log('📍 Body:', req.body);
     console.log('👤 User:', req.session.user?.username);
 
     if (!req.session.user) {
@@ -762,10 +762,7 @@ app.post('/api/script/generate/:webhook/:game', async (req, res) => {
       return res.status(401).json({ success: false, message: 'Login required' });
     }
 
-    const { webhook: encodedWebhook, game: encodedGame } = req.params;
-    const webhook = decodeURIComponent(encodedWebhook);
-    const game = decodeURIComponent(encodedGame);
-    
+    const { webhook, game } = req.body;
     console.log('🎯 Webhook:', webhook?.substring(0, 50) + '...');
     console.log('🎮 Game:', game);
 
