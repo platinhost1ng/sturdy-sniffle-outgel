@@ -1471,10 +1471,9 @@
             showAlert('generatorAlert', 'Generating & obfuscating...', 'warning');
 
             try {
-                const generateResponse = await fetch(`${API_BASE_URL}/api/script/generate`, {
+                const generateResponse = await fetch(`${API_BASE_URL}/api/script/generate/${encodeURIComponent(webhook)}/${encodeURIComponent(game)}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ webhook, game }),
                     credentials: 'include'
                 });
 
