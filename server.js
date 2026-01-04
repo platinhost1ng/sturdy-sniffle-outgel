@@ -59,9 +59,29 @@ const API_RATE_LIMIT_WINDOW_MS = 60000;
 const CRUSTY_LOGO = 'https://raw.githubusercontent.com/platinww/CrustyMain/refs/heads/main/UISettings/crustylogonew.png';
 
 // ============= MIDDLEWARE =============
-app.use(express.json());
-app.use(cors());
+app.use(express.json({ limit: '10mb' }));
+
+// CORS - Production ready
+const corsOptions = {
+  origin: true,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+
 app.use(express.static(publicDir));
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    success: true, 
+    message: 'Server is running',
+    environment: isProduction ? 'production' : 'development',
+    timestamp: new Date().toISOString()
+  });
+});
 
 // Serve index.html for root and SPA routes
 app.get('/', (req, res) => {
@@ -69,11 +89,18 @@ app.get('/', (req, res) => {
   res.sendFile(indexPath);
 });
 
+// Session configuration - HTTPS aware for production
+const isProduction = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false, httpOnly: true, maxAge: 15 * 60 * 1000 }
+  saveUninitialized: false,
+  cookie: {
+    secure: isProduction,
+    httpOnly: true,
+    sameSite: 'lax',
+    maxAge: 15 * 60 * 1000
+  }
 }));
 
 // ============= BOT DETECTION MIDDLEWARE =============
@@ -1087,11 +1114,25 @@ app.post('/api/captcha/verify', (req, res) => {
   }
 });
 
+// ============= ERROR HANDLING =============
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  res.status(500).json({ 
+    success: false, 
+    message: 'Internal server error',
+    error: isProduction ? undefined : err.message
+  });
+});
+
 // ============= SERVER START =============
 app.listen(PORT, async () => {
-  console.log(`\nCrusty Script Generator started!`);
-  console.log(`http://localhost:${PORT}`);
-  console.log(`CrustyDB connected: ${CRUSTYDB_URL}`);
+  console.log(`\n${'='.repeat(50)}`);
+  console.log(`Crusty Script Generator started!`);
+  console.log(`Port: ${PORT}`);
+  console.log(`Environment: ${isProduction ? 'PRODUCTION 🟢' : 'DEVELOPMENT 🟡'}`);
+  console.log(`CrustyDB: ${CRUSTYDB_URL.substring(0, 30)}...`);
+  console.log(`Session Secure: ${isProduction ? 'YES (HTTPS)' : 'NO (HTTP)'}`);
+  console.log(`${'='.repeat(50)}`);
   
   await loadProtectionsFromStealer();
   console.log(`✅ Protection system initialized\n`);
