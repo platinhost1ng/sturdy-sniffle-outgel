@@ -646,9 +646,9 @@ app.post('/api/auth/logout', (req, res) => {
   res.json({ success: true, message: 'Logged out' });
 });
 
-app.get('/api/webhook/validate/:webhook', async (req, res) => {
+app.post('/api/webhook/validate/*', async (req, res) => {
   try {
-    const { webhook } = req.params;
+    const webhook = req.params[0];
 
     if (!webhook) {
       return res.status(400).json({ success: false, message: 'Webhook URL required' });
@@ -656,7 +656,7 @@ app.get('/api/webhook/validate/:webhook', async (req, res) => {
 
     try {
       // Discord API ile webhook'u doğrula
-      const response = await axios.get(webhook);
+      const response = await axios.get(webhook, { timeout: 10000 });
       
       // Discord webhook response'u check et
       if (!response.data || !response.data.id) {
