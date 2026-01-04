@@ -61,15 +61,23 @@ const CRUSTY_LOGO = 'https://raw.githubusercontent.com/platinww/CrustyMain/refs/
 // ============= MIDDLEWARE =============
 app.use(express.json({ limit: '10mb' }));
 
-// CORS - Production ready
+// CORS - Allow any origin with credentials
 const corsOptions = {
-  origin: true,
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps or Postman)
+    if (!origin) return callback(null, true);
+    callback(null, true);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
+
+// Trust proxy for production
+app.set('trust proxy', 1);
 
 app.use(express.static(publicDir));
 
@@ -91,17 +99,23 @@ app.get('/', (req, res) => {
 
 // Session configuration - HTTPS aware for production
 const isProduction = process.env.NODE_ENV === 'production' || process.env.RENDER === 'true';
-app.use(session({
+
+// Simple in-memory session store (warning is expected for small production deployments)
+const sessionConfig = {
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
+  name: 'crusty.session',
   cookie: {
     secure: isProduction,
     httpOnly: true,
     sameSite: 'lax',
-    maxAge: 15 * 60 * 1000
+    maxAge: 15 * 60 * 1000,
+    domain: isProduction ? undefined : 'localhost'
   }
-}));
+};
+
+app.use(session(sessionConfig));
 
 // ============= BOT DETECTION MIDDLEWARE =============
 app.use((req, res, next) => {
