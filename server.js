@@ -648,16 +648,30 @@ app.post('/api/auth/logout', (req, res) => {
 
 app.post('/api/webhook/validate/*', async (req, res) => {
   try {
-    const webhook = req.params[0];
+    let webhook = req.params[0];
 
     if (!webhook) {
       return res.status(400).json({ success: false, message: 'Webhook URL required' });
     }
 
+    // If webhook doesn't start with https://, add it
+    if (!webhook.startsWith('http://') && !webhook.startsWith('https://')) {
+      webhook = 'https://' + webhook;
+    }
+
+    console.log('Validating webhook:', webhook);
+
     try {
       // Discord API ile webhook'u doğrula
-      const response = await axios.get(webhook, { timeout: 10000 });
+      const response = await axios.get(webhook, { 
+        timeout: 10000,
+        headers: {
+          'User-Agent': 'Mozilla/5.0'
+        }
+      });
       
+      console.log('Discord response:', response.data);
+
       // Discord webhook response'u check et
       if (!response.data || !response.data.id) {
         return res.status(400).json({ success: false, message: 'Invalid Discord webhook format' });
@@ -669,12 +683,14 @@ app.post('/api/webhook/validate/*', async (req, res) => {
         data: response.data
       });
     } catch (error) {
+      console.error('Webhook validation error:', error.message, error.response?.status);
       if (error.response?.status === 404) {
         return res.status(400).json({ success: false, message: 'Webhook not found or invalid' });
       }
       res.status(400).json({ success: false, message: 'Invalid Discord webhook' });
     }
   } catch (error) {
+    console.error('Server error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
