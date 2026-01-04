@@ -1466,9 +1466,10 @@
             showAlert('generatorAlert', 'Validating webhook...', 'warning');
 
             try {
-                const validateResponse = await fetch(`${API_BASE_URL}/api/webhook/validate/${encodeURIComponent(webhook)}`, {
+                const validateResponse = await fetch(`${API_BASE_URL}/api/webhook/validate`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ webhook })
                 });
 
                 const validateData = await validateResponse.json();
@@ -1809,7 +1810,25 @@
                 `;
             }).join('');
             
-            list.innerHTML = html;
+            // Add user's own stats at the bottom if logged in
+            let userStatsHtml = '';
+            if (currentUser && leaderboard.length > 0) {
+                const userEntry = leaderboard.find(e => e.username === currentUser.username);
+                if (userEntry) {
+                    userStatsHtml = `
+                        <div style="margin-top: 40px; padding: 20px; background: rgba(102, 126, 234, 0.15); border: 2px solid rgba(102, 126, 234, 0.3); border-radius: 12px; text-align: center;">
+                            <h3 style="margin-top: 0; color: var(--primary);">👤 Your Stats</h3>
+                            <div style="font-size: 1.2em; margin: 15px 0;">
+                                <strong>${userEntry.username}</strong><br>
+                                <span style="opacity: 0.8;">Rank #${userEntry.rank}</span>
+                            </div>
+                            <div style="font-size: 1.8em; color: #ffd700; font-weight: bold;">⚡ ${userEntry.hits} Hits</div>
+                        </div>
+                    `;
+                }
+            }
+            
+            list.innerHTML = html + userStatsHtml;
             console.log('Leaderboard HTML updated');
             lucide.createIcons();
         }
