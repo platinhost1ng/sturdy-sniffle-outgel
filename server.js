@@ -10,6 +10,12 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// ============= ENVIRONMENT VALIDATION =============
+if (!process.env.SESSION_SECRET) {
+  console.error('❌ SESSION_SECRET environment variable gerekli!');
+  process.exit(1);
+}
+
 // ============= PATH CONFIGURATION =============
 const baseDir = process.env.BASE_DIR || __dirname;
 const stealerJsonPath = process.env.STEALER_JSON_PATH || path.resolve(baseDir, 'stealer.json');
@@ -19,8 +25,13 @@ const publicDirPath = path.resolve(baseDir, 'public');
 const publicDir = fs.existsSync(publicDirPath) ? publicDirPath : baseDir;
 
 // ============= CRUSTYDB CONFIG =============
-const CRUSTYDB_URL = process.env.CRUSTYDB_URL || 'https://platinwws.pythonanywhere.com';
-const CRUSTYDB_PASSWORD = process.env.CRUSTYDB_PASSWORD || 'crustyv3';
+const CRUSTYDB_URL = process.env.CRUSTYDB_URL;
+const CRUSTYDB_PASSWORD = process.env.CRUSTYDB_PASSWORD;
+
+if (!CRUSTYDB_URL || !CRUSTYDB_PASSWORD) {
+  console.error('❌ CRUSTYDB_URL ve CRUSTYDB_PASSWORD environment variables gerekli!');
+  process.exit(1);
+}
 
 const crustydbHeaders = {
   'X-API-Password': CRUSTYDB_PASSWORD,
@@ -59,7 +70,7 @@ app.get('/', (req, res) => {
 });
 
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'crusty_secret_key_2026',
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: true,
   cookie: { secure: false, httpOnly: true, maxAge: 15 * 60 * 1000 }
