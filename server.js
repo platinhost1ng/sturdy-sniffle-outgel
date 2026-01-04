@@ -646,7 +646,7 @@ app.post('/api/auth/logout', (req, res) => {
   res.json({ success: true, message: 'Logged out' });
 });
 
-app.post('/api/webhook/validate/*', async (req, res) => {
+app.get('/api/webhook/validate/*', async (req, res) => {
   try {
     // req.params[0] tüm URL'yi capture ediyor
     const webhook = req.params[0];
