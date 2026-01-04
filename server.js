@@ -564,6 +564,7 @@ app.post('/api/auth/register', async (req, res) => {
     users.push(newUser);
     await saveStealerData({ users, scripts: data.scripts || [], leaderboard: data.leaderboard || [] });
 
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.json({ success: true, message: 'Registration successful' });
   } catch (error) {
     console.error('Register error:', error);
@@ -602,6 +603,7 @@ app.post('/api/auth/login', async (req, res) => {
       email: user.email
     };
 
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.json({
       success: true,
       message: 'Login successful',
