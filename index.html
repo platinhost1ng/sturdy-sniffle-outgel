@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crusty | Script Generator</title>
     <link rel="icon" href="https://raw.githubusercontent.com/platinww/CrustyMain/refs/heads/main/UISettings/crustylogonew.png">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         * {
             margin: 0;
@@ -41,16 +42,20 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.95);
             justify-content: center;
             align-items: center;
             z-index: 9999;
             backdrop-filter: blur(5px);
         }
 
+        .verification-overlay.hidden {
+            display: none;
+        }
+
         .verification-container {
             background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            padding: 40px;
+            padding: 50px;
             border-radius: 20px;
             text-align: center;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
@@ -69,10 +74,11 @@
         }
 
         .verification-container img {
-            width: 80px;
-            height: 80px;
+            width: 100px;
+            height: 100px;
             margin-bottom: 20px;
             animation: pulse 2s infinite;
+            border-radius: 15px;
         }
 
         @keyframes pulse {
@@ -81,20 +87,20 @@
         }
 
         .verification-container h2 {
-            font-size: 1.8em;
+            font-size: 2em;
             margin-bottom: 10px;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         .verification-text {
-            font-size: 1.1em;
+            font-size: 1.2em;
             opacity: 0.95;
             margin-bottom: 20px;
         }
 
         .verification-spinner {
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             margin: 20px auto;
             border: 4px solid rgba(255, 255, 255, 0.3);
             border-top-color: white;
@@ -106,11 +112,11 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Main Container */
+        /* Container */
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 30px;
         }
 
         /* Navbar */
@@ -127,8 +133,12 @@
             display: flex;
             align-items: center;
             gap: 15px;
-            font-size: 1.5em;
+            font-size: 1.8em;
             font-weight: bold;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .logo img {
@@ -144,10 +154,32 @@
             align-items: center;
         }
 
+        /* Pages */
+        .page {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Buttons */
         .btn {
-            padding: 10px 20px;
+            padding: 12px 24px;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             font-size: 1em;
             font-weight: bold;
@@ -179,39 +211,19 @@
             transform: translateY(-2px);
         }
 
-        /* Pages */
-        .page {
-            display: none;
-            animation: fadeIn 0.5s ease-in;
-        }
-
-        .page.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Auth Container */
+        /* Auth Form */
         .auth-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 40px;
+            gap: 60px;
             align-items: center;
             min-height: 600px;
+            margin-top: 50px;
         }
 
         .auth-form {
             background: rgba(255, 255, 255, 0.05);
-            padding: 40px;
+            padding: 50px;
             border-radius: 20px;
             backdrop-filter: blur(10px);
             border: 2px solid rgba(102, 126, 234, 0.2);
@@ -220,7 +232,7 @@
 
         .auth-form h2 {
             margin-bottom: 30px;
-            font-size: 2em;
+            font-size: 2.2em;
             background: linear-gradient(135deg, var(--primary), var(--accent));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -228,19 +240,21 @@
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             font-weight: bold;
             color: var(--light);
+            font-size: 1.05em;
         }
 
-        .form-group input {
+        .form-group input,
+        .form-group select {
             width: 100%;
-            padding: 12px 15px;
+            padding: 14px 16px;
             border: 2px solid rgba(102, 126, 234, 0.3);
             border-radius: 10px;
             background: rgba(255, 255, 255, 0.05);
@@ -250,7 +264,8 @@
             backdrop-filter: blur(10px);
         }
 
-        .form-group input:focus {
+        .form-group input:focus,
+        .form-group select:focus {
             outline: none;
             border-color: var(--primary);
             background: rgba(102, 126, 234, 0.1);
@@ -261,10 +276,15 @@
             color: rgba(255, 255, 255, 0.5);
         }
 
+        .form-group select option {
+            background: var(--dark);
+            color: white;
+        }
+
         .checkbox-group {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             margin: 20px 0;
         }
 
@@ -279,12 +299,6 @@
             margin: 0;
             cursor: pointer;
             user-select: none;
-        }
-
-        .auth-divider {
-            text-align: center;
-            margin: 20px 0;
-            opacity: 0.5;
         }
 
         .auth-link {
@@ -304,10 +318,6 @@
             color: var(--accent);
         }
 
-        .auth-image {
-            text-align: center;
-        }
-
         .auth-image img {
             max-width: 100%;
             height: auto;
@@ -322,22 +332,82 @@
         }
 
         /* Dashboard */
+        .user-section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            backdrop-filter: blur(10px);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.5em;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .user-details h3 {
+            margin: 0;
+            font-size: 1.2em;
+        }
+
+        .user-details p {
+            margin: 5px 0 0 0;
+            font-size: 0.9em;
+            opacity: 0.7;
+        }
+
+        .logout-btn {
+            background: var(--danger);
+            padding: 10px 25px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        /* Dashboard Grid */
         .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
             margin-bottom: 40px;
         }
 
         .card {
             background: rgba(255, 255, 255, 0.05);
-            padding: 30px;
-            border-radius: 20px;
+            padding: 35px;
+            border-radius: 15px;
             backdrop-filter: blur(10px);
             border: 2px solid rgba(102, 126, 234, 0.2);
             box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
             transition: all 0.3s ease;
             text-align: center;
+            cursor: pointer;
         }
 
         .card:hover {
@@ -346,20 +416,40 @@
             box-shadow: 0 20px 60px rgba(102, 126, 234, 0.4);
         }
 
+        .card-icon {
+            font-size: 3.5em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 70px;
+            height: 70px;
+        }
+
+        .card-icon i, .card-icon svg {
+            width: 50px;
+            height: 50px;
+            stroke: var(--primary);
+            stroke-width: 2;
+            color: var(--primary);
+        }
+
         .card h3 {
-            font-size: 1.5em;
+            font-size: 1.3em;
             margin-bottom: 10px;
             color: var(--light);
         }
 
         .card p {
             opacity: 0.8;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
-        .card-icon {
-            font-size: 3em;
-            margin-bottom: 15px;
+        .card-stat {
+            font-size: 2em;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 10px 0;
         }
 
         /* Generator Section */
@@ -370,10 +460,15 @@
             backdrop-filter: blur(10px);
             border: 2px solid rgba(102, 126, 234, 0.2);
             box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            display: none;
+        }
+
+        .generator-section.active {
+            display: block;
         }
 
         .generator-section h2 {
-            font-size: 2em;
+            font-size: 2.2em;
             margin-bottom: 30px;
             background: linear-gradient(135deg, var(--primary), var(--accent));
             -webkit-background-clip: text;
@@ -382,94 +477,49 @@
         }
 
         .generator-form {
-            max-width: 600px;
+            max-width: 700px;
             margin: 0 auto;
         }
 
-        .form-group select {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid rgba(102, 126, 234, 0.3);
+        /* Code Display */
+        .code-display {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
             border-radius: 10px;
-            background: rgba(255, 255, 255, 0.05);
-            color: white;
-            font-size: 1em;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-            cursor: pointer;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 400px;
+            overflow-y: auto;
+            word-break: break-all;
+            line-height: 1.6;
+            color: #10b981;
+            white-space: pre-wrap;
         }
 
-        .form-group select:focus {
-            outline: none;
-            border-color: var(--primary);
-            background: rgba(102, 126, 234, 0.1);
-            box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
-        }
-
-        .form-group select option {
-            background: var(--dark);
-            color: white;
-        }
-
-        .loading {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            padding: 10px;
-            background: rgba(245, 158, 11, 0.2);
-            border-radius: 10px;
-            color: var(--warning);
-            margin: 10px 0;
-        }
-
-        .spinner {
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(245, 158, 11, 0.3);
-            border-top-color: var(--warning);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        /* Footer */
-        .discord-footer {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            z-index: 1000;
-        }
-
-        .discord-btn {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #5865f2, #4752c4);
+        .copy-btn {
+            background: var(--success);
+            padding: 12px 24px;
             border: none;
-            border-radius: 50%;
+            border-radius: 8px;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 5px 20px rgba(88, 101, 242, 0.5);
+            font-weight: bold;
+            color: white;
+            margin: 10px 10px 10px 0;
             transition: all 0.3s ease;
-            text-decoration: none;
         }
 
-        .discord-btn:hover {
-            transform: scale(1.1) translateY(-5px);
-            box-shadow: 0 10px 30px rgba(88, 101, 242, 0.7);
-        }
-
-        .discord-btn img {
-            width: 35px;
-            height: 35px;
+        .copy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
         }
 
         /* Alert */
         .alert {
             padding: 15px 20px;
             border-radius: 10px;
-            margin-bottom: 20px;
+            margin: 20px 0;
             border-left: 4px solid;
             animation: slideDown 0.3s ease-out;
         }
@@ -492,10 +542,369 @@
             color: var(--warning);
         }
 
-        .alert-info {
-            background: rgba(102, 126, 234, 0.2);
-            border-color: var(--primary);
+        /* Discord Button */
+        .discord-footer {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            z-index: 1000;
+        }
+
+        .discord-btn {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #5865f2, #4752c4);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 20px rgba(88, 101, 242, 0.6);
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .discord-btn:hover {
+            transform: scale(1.15) translateY(-8px);
+            box-shadow: 0 10px 30px rgba(88, 101, 242, 0.8);
+        }
+
+        .discord-btn svg {
+            width: 40px;
+            height: 40px;
+        }
+
+        /* Session Timer */
+        .session-timer {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: rgba(245, 158, 11, 0.2);
+            border: 2px solid var(--warning);
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: bold;
+            color: var(--warning);
+            z-index: 100;
+            display: none;
+            font-size: 0.95em;
+        }
+
+        /* Success State */
+        .success-container {
+            background: rgba(16, 185, 129, 0.1);
+            border: 2px solid var(--success);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .success-container h3 {
+            color: var(--success);
+            margin-bottom: 15px;
+        }
+
+        .success-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* My Scripts Section */
+        .my-scripts-section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            display: none;
+        }
+
+        .my-scripts-section.active {
+            display: block;
+        }
+
+        .my-scripts-section h2 {
+            font-size: 2.2em;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Leaderboard Section */
+        .leaderboard-section {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            display: none !important;
+            width: 100%;
+        }
+
+        .leaderboard-section.active {
+            display: block !important;
+        }
+
+        .leaderboard-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .leaderboard-title {
+            font-size: 2.8em;
+            font-weight: 900;
+            background: linear-gradient(135deg, #667eea 0%, #ff6b6b 50%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0;
+            text-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .leaderboard-subtitle {
+            font-size: 1.2em;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 10px;
+            font-style: italic;
+            letter-spacing: 2px;
+        }
+
+        .leaderboard-section h2 {
+            font-size: 2.2em;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .leaderboard-entry {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .leaderboard-entry:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(102, 126, 234, 0.5);
+            transform: translateX(5px);
+        }
+
+        .leaderboard-rank {
+            font-size: 2em;
+            font-weight: bold;
+            min-width: 60px;
+            text-align: center;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .leaderboard-info {
+            flex: 1;
+        }
+
+        .leaderboard-info h3 {
+            margin: 0;
+            font-size: 1.3em;
+            color: var(--light);
+        }
+
+        .leaderboard-info p {
+            margin: 5px 0 0 0;
+            opacity: 0.8;
+            font-size: 0.9em;
+        }
+
+        .leaderboard-hits {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5em;
+            font-weight: bold;
             color: var(--primary);
+            min-width: 120px;
+            justify-content: flex-end;
+        }
+
+        .scripts-list {
+            display: grid;
+            gap: 20px;
+        }
+
+        .script-item {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .script-item:hover {
+            border-color: var(--primary);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            transform: translateY(-5px);
+        }
+
+        .script-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .script-info h3 {
+            margin: 0 0 8px 0;
+            color: var(--light);
+        }
+
+        .script-date {
+            font-size: 0.85em;
+            opacity: 0.6;
+            margin: 5px 0;
+        }
+
+        .script-webhook {
+            font-size: 0.85em;
+            opacity: 0.7;
+            word-break: break-all;
+            margin: 8px 0;
+            font-family: monospace;
+            color: var(--primary);
+        }
+
+        .script-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .script-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .script-btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .script-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .script-btn-secondary {
+            background: rgba(255, 107, 107, 0.2);
+            color: var(--accent);
+            border: 1px solid rgba(255, 107, 107, 0.5);
+        }
+
+        .script-btn-secondary:hover {
+            background: rgba(255, 107, 107, 0.3);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            opacity: 0.6;
+        }
+
+        .empty-state-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            backdrop-filter: blur(10px);
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .modal-content h2 {
+            margin-bottom: 25px;
+            color: var(--light);
+        }
+
+        .modal-close {
+            float: right;
+            font-size: 2em;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.3s;
+            background: none;
+            border: none;
+            color: white;
+        }
+
+        .modal-close:hover {
+            opacity: 1;
+        }
+
+        .protection-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .protection-badge.enabled {
+            background: rgba(16, 185, 129, 0.3);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .protection-badge.disabled {
+            background: rgba(239, 68, 68, 0.3);
+            color: var(--danger);
+            border: 1px solid var(--danger);
         }
 
         /* Responsive */
@@ -508,7 +917,7 @@
                 display: none;
             }
 
-            .navbar {
+            .user-section {
                 flex-direction: column;
                 gap: 20px;
             }
@@ -521,111 +930,29 @@
                 width: 100%;
                 text-align: center;
             }
-        }
 
-        /* User Info */
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 10px 20px;
-            background: rgba(102, 126, 234, 0.1);
-            border-radius: 10px;
-            border: 1px solid rgba(102, 126, 234, 0.3);
-        }
+            .container {
+                padding: 15px;
+            }
 
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
+            .discord-footer {
+                bottom: 15px;
+                left: 15px;
+            }
 
-        .user-details h4 {
-            margin: 0;
-            font-size: 1em;
-        }
-
-        .user-details p {
-            margin: 0;
-            font-size: 0.85em;
-            opacity: 0.7;
-        }
-
-        .logout-btn {
-            background: var(--danger);
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            border: none;
-            color: white;
-            transition: all 0.3s ease;
-        }
-
-        .logout-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
-        }
-
-        /* Code Display */
-        .code-display {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 20px;
-            border-radius: 10px;
-            border: 1px solid rgba(102, 126, 234, 0.3);
-            margin-top: 20px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9em;
-            max-height: 400px;
-            overflow-y: auto;
-            word-break: break-all;
-            line-height: 1.5;
-            color: #10b981;
-        }
-
-        .copy-btn {
-            background: var(--success);
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            color: white;
-            margin-top: 10px;
-            transition: all 0.3s ease;
-        }
-
-        .copy-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
-        }
-
-        /* Session Timer */
-        .session-timer {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(245, 158, 11, 0.2);
-            border: 2px solid var(--warning);
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-weight: bold;
-            color: var(--warning);
-            z-index: 100;
+            .session-timer {
+                top: 15px;
+                right: 15px;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Verification Modal -->
+    <!-- Browser Verification -->
     <div id="verificationOverlay" class="verification-overlay">
         <div class="verification-container">
             <img src="https://raw.githubusercontent.com/platinww/CrustyMain/refs/heads/main/UISettings/crustylogonew.png" alt="Crusty">
-            <h2>Crusty</h2>
+            <h2><i data-lucide="flame"></i> Crusty</h2>
             <p class="verification-text">Verifying Your Browser</p>
             <div class="verification-spinner"></div>
             <p style="opacity: 0.8; margin-top: 20px;">Please wait...</p>
@@ -633,14 +960,14 @@
     </div>
 
     <!-- Session Timer -->
-    <div class="session-timer" id="sessionTimer" style="display: none;">
-        ⏱️ Session: <span id="timerText">15:00</span>
+    <div class="session-timer" id="sessionTimer">
+        <i data-lucide="clock" style="width: 16px; height: 16px; display: inline-block; margin-right: 5px; vertical-align: -2px;"></i> Session: <span id="timerText">15:00</span>
     </div>
 
     <!-- Discord Button -->
     <a href="https://discord.gg/crusty-hub-1401564054186758186" target="_blank" class="discord-footer">
         <button class="discord-btn" title="Join Our Discord">
-            <svg width="35" height="35" viewBox="0 0 24 24" fill="white">
+            <svg fill="white" viewBox="0 0 24 24">
                 <path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.211.375-.444.864-.607 1.25a18.27 18.27 0 00-5.487 0c-.163-.386-.395-.875-.607-1.25a.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.08.08 0 00.087-.027c.461-.63.873-1.295 1.226-1.994a.076.076 0 00-.042-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.294.075.075 0 01.078-.01c3.927 1.793 8.18 1.793 12.062 0a.075.075 0 01.079.009c.12.098.246.198.373.295a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.076.076 0 00-.041.107c.36.699.77 1.364 1.225 1.994a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.057c.5-4.761-.838-8.895-3.549-12.55a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-.965-2.157-2.156 0-1.193.964-2.157 2.157-2.157 1.193 0 2.157.964 2.157 2.157 0 1.191-.964 2.156-2.157 2.156zm7.975 0c-1.183 0-2.157-.965-2.157-2.156 0-1.193.964-2.157 2.157-2.157 1.193 0 2.157.964 2.157 2.157 0 1.191-.964 2.156-2.157 2.156z"/>
             </svg>
         </button>
@@ -649,45 +976,38 @@
     <div class="container">
         <!-- Navbar -->
         <nav>
-            <div class="logo">
+            <div class="logo" onclick="backToDashboard()" style="cursor: pointer;">
                 <img src="https://raw.githubusercontent.com/platinww/CrustyMain/refs/heads/main/UISettings/crustylogonew.png" alt="Crusty">
-                <span>Crusty</span>
+                <span>CRUSTY</span>
             </div>
-            <div class="nav-buttons" id="navButtons">
-                <!-- Dynamically filled -->
-            </div>
+            <div class="nav-buttons" id="navButtons"></div>
         </nav>
-
-        <!-- API Base URL - Dynamic for production -->
-        <script>
-            const API_BASE_URL = window.location.origin;
-        </script>
 
         <!-- Login Page -->
         <div id="loginPage" class="page active">
             <div class="auth-container">
                 <div class="auth-form">
-                    <h2>🔐 Giriş Yap</h2>
+                    <h2><i data-lucide="lock"></i> Sign In</h2>
                     <div id="loginAlert"></div>
                     <form id="loginForm">
                         <div class="form-group">
-                            <label for="loginEmail">Email</label>
-                            <input type="email" id="loginEmail" placeholder="örneğin@example.com" required>
+                            <label>Email Address</label>
+                            <input type="email" id="loginEmail" placeholder="your@email.com" required>
                         </div>
                         <div class="form-group">
-                            <label for="loginPassword">Şifre</label>
-                            <input type="password" id="loginPassword" placeholder="Şifrenizi girin" required>
+                            <label>Password</label>
+                            <input type="password" id="loginPassword" placeholder="Enter your password" required>
                         </div>
                         <div class="checkbox-group">
                             <input type="checkbox" id="rememberMe">
-                            <label for="rememberMe">Beni Hatırla</label>
+                            <label for="rememberMe">Remember me on this device</label>
                         </div>
-                        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">
-                            🚀 Giriş Yap
+                        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px; font-size: 1.05em;">
+                            🚀 Sign In
                         </button>
                     </form>
                     <div class="auth-link">
-                        Hesabın yok mu? <a onclick="showRegister()">Kayıt Ol</a>
+                        Don't have an account? <a onclick="showRegister()">Create one</a>
                     </div>
                 </div>
                 <div class="auth-image">
@@ -700,31 +1020,31 @@
         <div id="registerPage" class="page">
             <div class="auth-container">
                 <div class="auth-form">
-                    <h2>📝 Kayıt Ol</h2>
+                    <h2><i data-lucide="user-plus"></i> Create Account</h2>
                     <div id="registerAlert"></div>
                     <form id="registerForm">
                         <div class="form-group">
-                            <label for="registerUsername">Kullanıcı Adı</label>
-                            <input type="text" id="registerUsername" placeholder="Benzersiz bir kullanıcı adı" required>
+                            <label>Username</label>
+                            <input type="text" id="registerUsername" placeholder="Choose a unique username" required>
                         </div>
                         <div class="form-group">
-                            <label for="registerEmail">Email</label>
-                            <input type="email" id="registerEmail" placeholder="örneğin@example.com" required>
+                            <label>Email Address</label>
+                            <input type="email" id="registerEmail" placeholder="your@email.com" required>
                         </div>
                         <div class="form-group">
-                            <label for="registerPassword">Şifre</label>
-                            <input type="password" id="registerPassword" placeholder="En az 8 karakter" required>
+                            <label>Password</label>
+                            <input type="password" id="registerPassword" placeholder="At least 8 characters" required>
                         </div>
                         <div class="form-group">
-                            <label for="registerConfirmPassword">Şifre Onayla</label>
-                            <input type="password" id="registerConfirmPassword" placeholder="Şifrenizi tekrar girin" required>
+                            <label>Confirm Password</label>
+                            <input type="password" id="registerConfirmPassword" placeholder="Re-enter your password" required>
                         </div>
-                        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">
-                            ✅ Kayıt Ol
+                        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px; font-size: 1.05em;">
+                            <i data-lucide="check" style="width: 16px; height: 16px; display: inline-block; margin-right: 5px; vertical-align: -2px;"></i> Create Account
                         </button>
                     </form>
                     <div class="auth-link">
-                        Zaten hesabın var mı? <a onclick="showLogin()">Giriş Yap</a>
+                        Already have an account? <a onclick="showLogin()">Sign in</a>
                     </div>
                 </div>
                 <div class="auth-image">
@@ -735,114 +1055,191 @@
 
         <!-- Dashboard -->
         <div id="dashboardPage" class="page">
-            <div style="margin-bottom: 40px;">
+            <!-- User Section -->
+            <div class="user-section">
                 <div class="user-info">
                     <div class="user-avatar" id="userAvatar">U</div>
                     <div class="user-details">
-                        <h4 id="userName">Kullanıcı Adı</h4>
+                        <h3 id="userName">Username</h3>
                         <p id="userEmail">email@example.com</p>
                     </div>
-                    <button class="logout-btn" onclick="logout()">Çıkış Yap</button>
+                </div>
+                <button class="logout-btn" onclick="logout()">Sign Out</button>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="dashboard-grid">
+                <div class="card" onclick="showGenerator()" style="cursor: pointer;">
+                    <div class="card-icon" id="genIcon"><i data-lucide="zap"></i></div>
+                    <h3>Generate Script</h3>
+                    <p>Create your custom Steal A Brainrot script</p>
+                    <p style="color: var(--primary); font-weight: bold;">Click to Start →</p>
+                </div>
+
+                <div class="card" onclick="showMyScripts()" style="cursor: pointer;">
+                    <div class="card-icon" id="scriptsIcon"><i data-lucide="scroll"></i></div>
+                    <h3>My Scripts</h3>
+                    <p>View and manage your generated scripts</p>
+                    <p style="color: var(--primary); font-weight: bold;">View All →</p>
+                </div>
+
+                <div class="card" onclick="showLeaderboard()" style="cursor: pointer;">
+                    <div class="card-icon" id="leaderboardIcon"><i data-lucide="trending-up"></i></div>
+                    <h3>Leaderboard</h3>
+                    <p>Top 20 Most Hit Scripts</p>
+                    <p style="color: var(--primary); font-weight: bold;">View Rankings →</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-icon" id="securityIcon"><i data-lucide="shield"></i></div>
+                    <h3>Account Security</h3>
+                    <p>Your account is secure</p>
+                    <p style="color: var(--success); font-weight: bold; margin-top: 30px;"><i data-lucide="check-circle" style="width: 18px; height: 18px; display: inline-block; margin-right: 5px; vertical-align: -3px;"></i> PROTECTED</p>
                 </div>
             </div>
 
-            <div class="dashboard-grid">
-                <div class="card">
-                    <div class="card-icon">🔥</div>
-                    <h3>Script Oluştur</h3>
-                    <p>Özel Roblox scripti oluştur</p>
-                    <button class="btn btn-primary" onclick="showGenerator()">Başla</button>
+            <!-- My Scripts Section -->
+            <div id="myScriptsSection" class="my-scripts-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                    <h2 style="margin: 0;"><i data-lucide="scroll" style="width: 28px; height: 28px; display: inline; margin-right: 10px;"></i> My Scripts</h2>
+                    <button class="btn btn-secondary" onclick="backToDashboard()"><i data-lucide="arrow-left" style="width: 18px; height: 18px; display: inline; margin-right: 5px;"></i> Back to Dashboard</button>
                 </div>
-                <div class="card">
-                    <div class="card-icon">📊</div>
-                    <h3>İstatistikler</h3>
-                    <p>Kullanım istatistiklerini gör</p>
-                    <p style="font-size: 0.9em; margin-top: 10px;">
-                        <strong>Toplam Scriptler:</strong> <span id="totalScripts">0</span><br>
-                        <strong>Bugün:</strong> <span id="todayScripts">0</span>
-                    </p>
-                </div>
-                <div class="card">
-                    <div class="card-icon">🛡️</div>
-                    <h3>Güvenlik</h3>
-                    <p>Hesabın güvende</p>
-                    <p style="font-size: 0.9em; margin-top: 10px; color: var(--success);">✓ Aktif</p>
-                </div>
+                <div id="scriptsAlert"></div>
+                <div id="scriptsList" class="scripts-list"></div>
             </div>
 
             <!-- Generator Section -->
-            <div id="generatorSection" class="generator-section" style="display: none;">
-                <h2>🔥 Steal a Brainrot Script Oluştur</h2>
+            <div id="generatorSection" class="generator-section">
+                <h2><i data-lucide="zap" style="width: 28px; height: 28px; display: inline; margin-right: 10px;"></i> Generate Your Script</h2>
                 <div class="generator-form">
-                    <div style="text-align: center; margin-bottom: 30px;">
-                        <p style="font-size: 1.1em; opacity: 0.9;">🎮 Steal a Brainrot - Premium Roblox Exploit</p>
-                        <p style="font-size: 0.9em; opacity: 0.7; margin-top: 5px;">Güvenli, hızlı ve güvenilir</p>
+                    <div class="form-group">
+                        <label>Select Game</label>
+                        <select id="gameSelect">
+                            <option value="steal-a-brainrot">Steal A Brainrot</option>
+                        </select>
                     </div>
 
                     <div class="form-group">
-                        <label for="webhookInput">Discord Webhook URL</label>
+                        <label>Discord Webhook URL</label>
                         <input type="url" id="webhookInput" placeholder="https://discord.com/api/webhooks/..." required>
-                        <small style="opacity: 0.7; margin-top: 5px; display: block;">Webhook'unuzu <a href="https://discord.com/developers/applications" target="_blank" style="color: var(--primary);">Discord Developer Portal</a>'dan oluşturabilirsiniz</small>
+                        <small style="opacity: 0.7; margin-top: 8px; display: block;">
+                            <a href="#" onclick="openWebhookGuide(); return false;" style="color: var(--primary); text-decoration: underline; cursor: pointer;">📖 How to get your Discord Webhook?</a>
+                        </small>
                     </div>
 
                     <div id="generatorAlert"></div>
-                    <button class="btn btn-primary" onclick="generateScript()" style="width: 100%; padding: 15px; margin-top: 20px; font-size: 1.1em;">
-                        ⚡ Script Oluştur
+
+                    <button class="btn btn-primary" onclick="generateScript()" style="width: 100%; padding: 15px; font-size: 1.1em; margin-bottom: 30px;">
+                        <i data-lucide="zap" style="width: 18px; height: 18px; display: inline; margin-right: 5px;"></i> Generate Script
                     </button>
 
-                    <div id="scriptResult" style="display: none; margin-top: 30px;">
-                        <div style="background: rgba(16, 185, 129, 0.2); padding: 15px; border-radius: 10px; border-left: 4px solid var(--success); margin-bottom: 20px;">
-                            <h3 style="color: var(--success); margin: 0;">✅ Script Başarıyla Oluşturuldu!</h3>
-                            <p style="margin: 5px 0 0 0; font-size: 0.9em; opacity: 0.9;">Aşağıdan kopyalayabilir veya indirebilirsiniz</p>
+                    <!-- Script Result -->
+                    <div id="scriptResult" style="display: none;">
+                        <div class="success-container">
+                            <h3><i data-lucide="check-circle" style="width: 24px; height: 24px; display: inline-block; margin-right: 8px; vertical-align: -4px;"></i> Script Generated Successfully!</h3>
+                            <p style="margin-top: 10px; opacity: 0.9;">Your obfuscated script is ready to use</p>
                         </div>
-                        <div id="generatedCode" class="code-display"></div>
-                        <button class="copy-btn" onclick="copyScript()">📋 Kopyala</button>
-                        <button class="btn btn-secondary" onclick="downloadScript()" style="margin-left: 10px; padding: 10px 20px;">
-                            ⬇️ İndir
+
+                        <div style="margin-top: 20px;">
+                            <label style="display: block; margin-bottom: 10px; font-weight: bold;"><i data-lucide="copy" style="width: 18px; height: 18px; display: inline-block; margin-right: 5px; vertical-align: -3px;"></i> Loadstring (Copy & Use):</label>
+                            <div id="generatedCode" class="code-display"></div>
+                            <div class="success-buttons">
+                                <button class="copy-btn" onclick="copyScript()"><i data-lucide="copy" style="width: 16px; height: 16px; display: inline-block; margin-right: 5px; vertical-align: -2px;"></i> Copy Loadstring</button>
+                                <button class="btn btn-secondary" onclick="downloadScript()">⬇️ Download Script</button>
+                                <button class="btn btn-secondary" onclick="showLinks()">🔗 View Links</button>
+                            </div>
+                        </div>
+
+                        <div id="linksSection" style="display: none; margin-top: 30px; padding: 20px; background: rgba(102, 126, 234, 0.1); border-radius: 10px; border: 1px solid rgba(102, 126, 234, 0.3);">
+                            <h4 style="margin-bottom: 15px;">📌 Direct Links:</h4>
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                <div>
+                                    <strong>Pastefy:</strong>
+                                    <a id="pastifyLink" href="#" target="_blank" style="color: var(--primary); margin-left: 10px;">Open Paste</a>
+                                </div>
+                                <div>
+                                    <strong>Raw Script:</strong>
+                                    <a id="rawLink" href="#" target="_blank" style="color: var(--primary); margin-left: 10px;">Open Raw</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 20px; padding: 15px; background: rgba(245, 158, 11, 0.1); border-left: 4px solid var(--warning); border-radius: 5px;">
+                            <strong style="color: var(--warning);">💡 Usage Guide:</strong>
+                            <ol style="margin-left: 20px; margin-top: 10px; opacity: 0.9;">
+                                <li>Copy the loadstring above</li>
+                                <li>Paste it in your Roblox Script Executor</li>
+                                <li>Run the script</li>
+                                <li>Wait for webhook notifications</li>
+                            </ol>
+                        </div>
+
+                        <button class="btn btn-secondary" onclick="resetGenerator()" style="width: 100%; margin-top: 20px; padding: 12px;">
+                            <i data-lucide="refresh-cw" style="width: 16px; height: 16px; display: inline-block; margin-right: 5px; vertical-align: -2px;"></i> Generate Another Script
                         </button>
                     </div>
+                </div>
+            </div>
+
+            <!-- Leaderboard Section -->
+            <div id="leaderboardSection" class="leaderboard-section" style="display: none;">
+                <div class="leaderboard-header">
+                    <h1 class="leaderboard-title">
+                        <i data-lucide="trophy" style="width: 40px; height: 40px; display: inline; margin-right: 15px; vertical-align: -8px;"></i>
+                        Crusty #1 Scam Script Service
+                    </h1>
+                    <p class="leaderboard-subtitle">👑 TOP PERFORMERS 👑</p>
+                </div>
+
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px;">
+                    <h2 style="margin: 0;"><i data-lucide="trending-up" style="width: 28px; height: 28px; display: inline; margin-right: 10px;"></i> Top 20 Rankings</h2>
+                    <button class="btn btn-secondary" onclick="backToDashboard()" style="padding: 8px 16px;">
+                        <i data-lucide="arrow-left" style="width: 16px; height: 16px; display: inline-block; margin-right: 5px; vertical-align: -2px;"></i> Back
+                    </button>
+                </div>
+
+                <div id="leaderboardAlert"></div>
+
+                <div id="leaderboardList" style="display: grid; gap: 15px;">
+                    <!-- Leaderboard entries will be populated here -->
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Global State
+        const API_BASE_URL = 'https://sturdy-sniffle-outgel.onrender.com';
         let currentUser = null;
         let sessionTimer = null;
-        let sessionTime = 15 * 60; // 15 minutes
+        let sessionTime = 15 * 60;
         let generatedScript = null;
+        let currentLinks = null;
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            // Simulate browser verification
             setTimeout(() => {
-                document.getElementById('verificationOverlay').style.display = 'none';
+                document.getElementById('verificationOverlay').classList.add('hidden');
                 checkLoginStatus();
                 setupFormHandlers();
+                lucide.createIcons();
             }, 3000);
 
-            // Check remember me
-            const savedUser = localStorage.getItem('crustyRememberMe');
-            if (savedUser) {
-                const user = JSON.parse(savedUser);
-                document.getElementById('loginEmail').value = user.email;
+            const savedEmail = localStorage.getItem('crustyRememberMe');
+            if (savedEmail) {
+                document.getElementById('loginEmail').value = savedEmail;
                 document.getElementById('rememberMe').checked = true;
             }
         });
 
         function setupFormHandlers() {
-            // Login Form
             document.getElementById('loginForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const email = document.getElementById('loginEmail').value;
                 const password = document.getElementById('loginPassword').value;
                 const rememberMe = document.getElementById('rememberMe').checked;
-
                 await login(email, password, rememberMe);
             });
 
-            // Register Form
             document.getElementById('registerForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const username = document.getElementById('registerUsername').value;
@@ -851,34 +1248,29 @@
                 const confirmPassword = document.getElementById('registerConfirmPassword').value;
 
                 if (password !== confirmPassword) {
-                    showAlert('registerAlert', '❌ Şifreler eşleşmiyor!', 'error');
+                    showAlert('registerAlert', 'Passwords do not match!', 'error');
                     return;
                 }
-
                 if (password.length < 8) {
-                    showAlert('registerAlert', '❌ Şifre en az 8 karakter olmalı!', 'error');
+                    showAlert('registerAlert', 'Password must be at least 8 characters!', 'error');
                     return;
                 }
-
                 await register(username, email, password);
             });
         }
 
         async function login(email, password, rememberMe) {
-            // Validate
             if (!email || !password) {
-                showAlert('loginAlert', '❌ Tüm alanları doldurun!', 'error');
+                showAlert('loginAlert', 'Please fill all fields!', 'error');
                 return;
             }
 
-            showAlert('loginAlert', '🔄 Giriş yapılıyor...', 'warning');
+            showAlert('loginAlert', 'Signing in...', 'warning');
 
             try {
                 const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
                     body: JSON.stringify({ email, password })
                 });
@@ -886,62 +1278,49 @@
                 const data = await response.json();
 
                 if (!data.success) {
-                    showAlert('loginAlert', `❌ ${data.message}`, 'error');
+                    showAlert('loginAlert', `${data.message}`, 'error');
                     return;
                 }
 
-                // Save user info
                 currentUser = data.user;
                 localStorage.setItem('crustyUser', JSON.stringify(currentUser));
 
                 if (rememberMe) {
-                    localStorage.setItem('crustyRememberMe', JSON.stringify({ email }));
+                    localStorage.setItem('crustyRememberMe', email);
                 } else {
                     localStorage.removeItem('crustyRememberMe');
                 }
 
-                showAlert('loginAlert', '✅ Giriş başarılı! Yönlendiriliyorsunuz...', 'success');
-                setTimeout(() => {
-                    showDashboard();
-                }, 1500);
+                showAlert('loginAlert', 'Sign in successful!', 'success');
+                setTimeout(() => showDashboard(), 1500);
             } catch (error) {
                 console.error('Login error:', error);
-                showAlert('loginAlert', '❌ Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+                showAlert('loginAlert', 'Connection error. Please try again.', 'error');
             }
         }
 
         async function register(username, email, password) {
-            // Validate
-            if (!username || !email || !password) {
-                showAlert('registerAlert', '❌ Tüm alanları doldurun!', 'error');
-                return;
-            }
-
-            showAlert('registerAlert', '🔄 Kayıt yapılıyor...', 'warning');
+            showAlert('registerAlert', 'Creating account...', 'warning');
 
             try {
                 const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, email, password, confirmPassword: password })
                 });
 
                 const data = await response.json();
 
                 if (!data.success) {
-                    showAlert('registerAlert', `❌ ${data.message}`, 'error');
+                    showAlert('registerAlert', `${data.message}`, 'error');
                     return;
                 }
 
-                showAlert('registerAlert', '✅ Kayıt başarılı! Giriş sayfasına yönlendiriliyorsunuz...', 'success');
-                setTimeout(() => {
-                    showLogin();
-                }, 1500);
+                showAlert('registerAlert', 'Account created! Redirecting...', 'success');
+                setTimeout(() => showLogin(), 1500);
             } catch (error) {
                 console.error('Register error:', error);
-                showAlert('registerAlert', '❌ Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+                showAlert('registerAlert', 'Connection error. Please try again.', 'error');
             }
         }
 
@@ -951,11 +1330,10 @@
             clearTimeout(sessionTimer);
             document.getElementById('sessionTimer').style.display = 'none';
 
-            // Notify backend
             fetch(`${API_BASE_URL}/api/auth/logout`, {
                 method: 'POST',
                 credentials: 'include'
-            }).catch(err => console.error('Logout error:', err));
+            }).catch(err => console.error(err));
 
             showLogin();
         }
@@ -971,9 +1349,7 @@
         }
 
         function showPage(pageId) {
-            document.querySelectorAll('.page').forEach(page => {
-                page.classList.remove('active');
-            });
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
             document.getElementById(pageId).classList.add('active');
         }
 
@@ -992,14 +1368,19 @@
             updateNavButtons(true);
             updateUserInfo();
             startSessionTimer();
-            document.getElementById('generatorSection').style.display = 'none';
+            document.querySelector('.dashboard-grid').style.display = 'grid';
+            document.getElementById('generatorSection').classList.remove('active');
+            document.getElementById('myScriptsSection').classList.remove('active');
+            document.getElementById('scriptResult').style.display = 'none';
         }
 
         function showGenerator() {
-            document.getElementById('generatorSection').style.display = 'block';
+            document.querySelector('.dashboard-grid').style.display = 'none';
+            document.getElementById('myScriptsSection').classList.remove('active');
+            document.getElementById('generatorSection').classList.add('active');
             document.getElementById('scriptResult').style.display = 'none';
             document.getElementById('webhookInput').value = '';
-            document.getElementById('gameSelect').value = '';
+            document.getElementById('gameSelect').value = 'steal-a-brainrot';
         }
 
         function updateNavButtons(isLoggedIn) {
@@ -1008,14 +1389,14 @@
 
             if (isLoggedIn) {
                 navButtons.innerHTML = `
-                    <button class="btn btn-secondary" onclick="showDashboard()">📊 Dashboard</button>
-                    <button class="btn btn-secondary" onclick="showGenerator()">🔥 Generator</button>
-                    <button class="btn btn-primary" onclick="logout()">Çıkış Yap</button>
+                    <button class="btn btn-secondary" onclick="showDashboard()"><i data-lucide="bar-chart-3" style="width: 16px; height: 16px; display: inline-block; margin-right: 5px; vertical-align: -2px;"></i> Dashboard</button>
+                    <button class="btn btn-secondary" onclick="showGenerator()"><i data-lucide="flame" style="width: 16px; height: 16px; display: inline-block; margin-right: 5px; vertical-align: -2px;"></i> Generator</button>
+                    <button class="btn btn-primary" onclick="logout()">Sign Out</button>
                 `;
             } else {
                 navButtons.innerHTML = `
-                    <button class="btn btn-secondary" onclick="showLogin()">Giriş Yap</button>
-                    <button class="btn btn-primary" onclick="showRegister()">Kayıt Ol</button>
+                    <button class="btn btn-secondary" onclick="showLogin()">Sign In</button>
+                    <button class="btn btn-primary" onclick="showRegister()">Create Account</button>
                 `;
             }
         }
@@ -1027,12 +1408,11 @@
                 document.getElementById('userName').textContent = currentUser.username;
                 document.getElementById('userEmail').textContent = currentUser.email;
 
-                // Fetch stats from backend
                 try {
                     const response = await fetch(`${API_BASE_URL}/api/stats`, {
                         credentials: 'include'
                     });
-                    
+
                     if (response.ok) {
                         const data = await response.json();
                         if (data.success) {
@@ -1058,7 +1438,7 @@
 
                 if (sessionTime <= 0) {
                     clearTimeout(sessionTimer);
-                    alert('Oturumunuzun süresi doldu. Lütfen yeniden giriş yapın.');
+                    alert('Your session has expired. Please sign in again.');
                     logout();
                 }
             }, 1000);
@@ -1067,32 +1447,30 @@
         function updateTimerDisplay() {
             const minutes = Math.floor(sessionTime / 60);
             const seconds = sessionTime % 60;
-            document.getElementById('timerText').textContent = 
+            document.getElementById('timerText').textContent =
                 `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         }
 
         async function generateScript() {
             const webhook = document.getElementById('webhookInput').value;
+            const game = document.getElementById('gameSelect').value;
 
             if (!webhook) {
-                showAlert('generatorAlert', 'Lütfen webhook URL\'sini girin!', 'error');
+                showAlert('generatorAlert', 'Please enter webhook URL!', 'error');
                 return;
             }
 
             if (!webhook.includes('discord.com/api/webhooks')) {
-                showAlert('generatorAlert', 'Geçersiz Discord webhook URL\'si!', 'error');
+                showAlert('generatorAlert', 'Invalid Discord webhook URL!', 'error');
                 return;
             }
 
-            showAlert('generatorAlert', 'Webhook doğrulanıyor...', 'warning');
+            showAlert('generatorAlert', 'Validating webhook...', 'warning');
 
             try {
-                // Validate webhook
                 const validateResponse = await fetch(`${API_BASE_URL}/api/webhook/validate`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
                     body: JSON.stringify({ webhook })
                 });
@@ -1100,51 +1478,49 @@
                 const validateData = await validateResponse.json();
 
                 if (!validateData.success) {
-                    showAlert('generatorAlert', '❌ Webhook doğrulaması başarısız!', 'error');
+                    showAlert('generatorAlert', 'Webhook validation failed!', 'error');
                     return;
                 }
 
-                showAlert('generatorAlert', '🔐 Script oluşturuluyor...', 'warning');
+                showAlert('generatorAlert', 'Generating & obfuscating...', 'warning');
 
-                // Generate script
                 const generateResponse = await fetch(`${API_BASE_URL}/api/script/generate`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
-                    body: JSON.stringify({ webhook, protection: true })
+                    body: JSON.stringify({ webhook, protection: true, game })
                 });
 
                 const generateData = await generateResponse.json();
 
                 if (!generateData.success) {
-                    showAlert('generatorAlert', `❌ ${generateData.message}`, 'error');
+                    showAlert('generatorAlert', `${generateData.message}`, 'error');
                     return;
                 }
 
-                generatedScript = generateData.script;
+                generatedScript = generateData.data.loadstring;
+                currentLinks = {
+                    pasteUrl: generateData.data.pasteUrl,
+                    rawUrl: generateData.data.rawUrl
+                };
+
                 document.getElementById('generatedCode').textContent = generatedScript;
                 document.getElementById('scriptResult').style.display = 'block';
-                showAlert('generatorAlert', '✅ Script başarıyla oluşturuldu!', 'success');
+                showAlert('generatorAlert', 'Script generated successfully!', 'success');
                 updateUserInfo();
             } catch (error) {
-                console.error('Generate script error:', error);
-                showAlert('generatorAlert', '❌ Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+                console.error('Generate error:', error);
+                showAlert('generatorAlert', 'An error occurred. Please try again.', 'error');
             }
-        }
-
-        function generateScriptCode(game, webhook, protection) {
-            // Not needed anymore - backend generates
         }
 
         function copyScript() {
             if (generatedScript) {
                 navigator.clipboard.writeText(generatedScript);
                 const btn = event.target;
-                btn.textContent = '✅ Kopyalandı!';
+                btn.innerHTML = '<i data-lucide="check" style="width: 16px; height: 16px; display: inline-block; margin-right: 5px; vertical-align: -2px;"></i> Copied!'; lucide.createIcons();
                 setTimeout(() => {
-                    btn.textContent = '📋 Kopyala';
+                    btn.innerHTML = '<i data-lucide="copy" style="width: 16px; height: 16px; display: inline-block; margin-right: 5px; vertical-align: -2px;"></i> Copy Loadstring'; lucide.createIcons();
                 }, 2000);
             }
         }
@@ -1161,6 +1537,24 @@
             }
         }
 
+        function showLinks() {
+            document.getElementById('linksSection').style.display = 'block';
+            if (currentLinks) {
+                document.getElementById('pastifyLink').href = currentLinks.pasteUrl;
+                document.getElementById('rawLink').href = currentLinks.rawUrl;
+            }
+        }
+
+        function resetGenerator() {
+            document.getElementById('webhookInput').value = '';
+            document.getElementById('gameSelect').value = 'steal-a-brainrot';
+            document.getElementById('scriptResult').style.display = 'none';
+            document.getElementById('linksSection').style.display = 'none';
+            document.getElementById('generatorAlert').innerHTML = '';
+            generatedScript = null;
+            currentLinks = null;
+        }
+
         function showAlert(elementId, message, type) {
             const alertBox = document.getElementById(elementId);
             alertBox.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
@@ -1168,6 +1562,381 @@
                 alertBox.innerHTML = '';
             }, 5000);
         }
+
+        // My Scripts Functions
+        function showMyScripts() {
+            document.querySelector('.dashboard-grid').style.display = 'none';
+            document.getElementById('generatorSection').classList.remove('active');
+            document.getElementById('leaderboardSection').classList.remove('active');
+            document.getElementById('myScriptsSection').classList.add('active');
+            fetchUserScripts();
+        }
+
+        function showLeaderboard() {
+            document.querySelector('.dashboard-grid').style.display = 'none';
+            document.getElementById('generatorSection').classList.remove('active');
+            document.getElementById('myScriptsSection').classList.remove('active');
+            document.getElementById('leaderboardSection').classList.add('active');
+            fetchLeaderboard();
+        }
+
+        function backToDashboard() {
+            // Hide all sections
+            document.querySelector('.dashboard-grid').style.display = 'grid';
+            document.getElementById('myScriptsSection').classList.remove('active');
+            document.getElementById('generatorSection').classList.remove('active');
+            document.getElementById('leaderboardSection').classList.remove('active');
+            // Force repaint
+            document.body.offsetHeight;
+        }
+
+        async function fetchUserScripts() {
+            try {
+                const response = await fetch('/api/scripts/list', {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        showAlert('scriptsAlert', 'Please login again', 'error');
+                        return;
+                    }
+                    throw new Error('Failed to fetch scripts');
+                }
+
+                const data = await response.json();
+                displayScripts(data.scripts || []);
+            } catch (error) {
+                console.error('Error fetching scripts:', error);
+                showAlert('scriptsAlert', 'Error loading scripts: ' + error.message, 'error');
+            }
+        }
+
+        function displayScripts(scripts) {
+            const scriptsList = document.getElementById('scriptsList');
+            
+            if (!scripts || scripts.length === 0) {
+                scriptsList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                            </svg>
+                        </div>
+                        <h3>No Scripts Yet</h3>
+                        <p>Generate your first script to see it here</p>
+                        <button class="btn btn-primary" onclick="showGenerator()" style="margin-top: 20px;">Generate Script</button>
+                    </div>
+                `;
+                return;
+            }
+
+            scriptsList.innerHTML = scripts.map(script => {
+                const date = new Date(script.createdAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                const protectionStatus = script.protection ? 'Protected' : 'No Protection';
+                const protectionClass = script.protection ? 'enabled' : 'disabled';
+                const protectionEmoji = script.protection ? '✓' : '✕';
+                
+                // Create loadstring from rawUrl if not available
+                const loadstring = script.loadstring || (script.rawUrl ? `loadstring(game:HttpGet("${script.rawUrl}"))()` : '');
+
+                return `
+                    <div class="script-item">
+                        <div class="script-header">
+                            <div class="script-info">
+                                <h3>${script.game || 'Steal A Brainrot'}</h3>
+                                <div class="script-date">${date}</div>
+                                <div class="script-webhook">${script.webhook}</div>
+                                <span class="protection-badge ${protectionClass}">${protectionEmoji} ${protectionStatus}</span>
+                            </div>
+                        </div>
+                        <div class="script-actions">
+                            <button class="script-btn script-btn-primary" onclick="copyLoadstring('${loadstring.replace(/'/g, "\\'")}')">
+                                <i data-lucide="copy" style="width: 14px; height: 14px; display: inline-block; margin-right: 5px; vertical-align: -2px;"></i> Copy
+                            </button>
+                            <button class="script-btn script-btn-primary" onclick="editWebhook('${script.id}', '${script.webhook}', ${script.protection})">
+                                <i data-lucide="edit-2" style="width: 14px; height: 14px; display: inline-block; margin-right: 5px; vertical-align: -2px;"></i> Edit Webhook
+                            </button>
+                            <button class="script-btn script-btn-secondary" onclick="deleteScript('${script.id}')">
+                                <i data-lucide="trash-2" style="width: 14px; height: 14px; display: inline-block; margin-right: 5px; vertical-align: -2px;"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function copyLoadstring(loadstring) {
+            navigator.clipboard.writeText(loadstring).then(() => {
+                showAlert('scriptsAlert', 'Loadstring copied!', 'success');
+            }).catch(() => {
+                showAlert('scriptsAlert', '❌ Failed to copy', 'error');
+            });
+        }
+
+        function editWebhook(scriptId, currentWebhook, hasProtection) {
+            window.currentEditingScriptId = scriptId;
+            document.getElementById('newWebhookInput').value = currentWebhook;
+            document.getElementById('editWebhookModal').classList.add('active');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editWebhookModal').classList.remove('active');
+            document.getElementById('newWebhookInput').value = '';
+            document.getElementById('editWebhookAlert').innerHTML = '';
+            window.currentEditingScriptId = null;
+        }
+
+        function openWebhookGuide() {
+            document.getElementById('webhookGuideModal').classList.add('active');
+        }
+
+        function closeWebhookGuide() {
+            document.getElementById('webhookGuideModal').classList.remove('active');
+        }
+
+        async function saveWebhookChanges() {
+            const scriptId = window.currentEditingScriptId;
+            const newWebhook = document.getElementById('newWebhookInput').value.trim();
+
+            if (!newWebhook) {
+                showAlert('editWebhookAlert', 'Please enter a webhook URL', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/scripts/update/${scriptId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        webhookUrl: newWebhook,
+                        hasProtection: true
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to update webhook');
+                }
+
+                showAlert('editWebhookAlert', 'Webhook updated successfully!', 'success');
+                setTimeout(() => {
+                    closeEditModal();
+                    fetchUserScripts();
+                }, 2000);
+            } catch (error) {
+                console.error('Error updating webhook:', error);
+                showAlert('editWebhookAlert', 'Error: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteScript(scriptId) {
+            if (!confirm('Delete this script? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/scripts/delete/${scriptId}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to delete script');
+                }
+
+                showAlert('scriptsAlert', 'Script deleted successfully!', 'success');
+                fetchUserScripts();
+            } catch (error) {
+                console.error('Error deleting script:', error);
+                showAlert('scriptsAlert', 'Error: ' + error.message, 'error');
+            }
+        }
+
+        async function fetchLeaderboard() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/leaderboard`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load leaderboard');
+                }
+                
+                const data = await response.json();
+                console.log('Leaderboard data:', data);
+                
+                displayLeaderboard(data.leaderboard || []);
+            } catch (error) {
+                console.error('Error fetching leaderboard:', error);
+                showAlert('leaderboardAlert', 'Error loading leaderboard: ' + error.message, 'error');
+            }
+        }
+
+        function displayLeaderboard(leaderboard) {
+            const list = document.getElementById('leaderboardList');
+            
+            console.log('Displaying leaderboard:', leaderboard);
+            console.log('List element:', list);
+
+            if (!leaderboard || leaderboard.length === 0) {
+                list.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #888;">
+                        <i data-lucide="inbox" style="width: 48px; height: 48px; margin-bottom: 15px;"></i>
+                        <p>No data yet. Keep generating scripts!</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            const medals = ['🥇', '🥈', '🥉'];
+            const html = leaderboard.map(entry => {
+                const medal = medals[entry.rank - 1] || '✨';
+                const hitIcon = entry.hits > 10 ? '🔥' : entry.hits > 5 ? '💥' : '⭐';
+                return `
+                    <div class="leaderboard-entry">
+                        <div class="leaderboard-rank">${medal} #${entry.rank}</div>
+                        <div class="leaderboard-info">
+                            <h3>${entry.username}</h3>
+                        </div>
+                        <div class="leaderboard-hits">
+                            ${hitIcon} ${entry.hits} <i data-lucide="zap" style="width: 20px; height: 20px; display: inline-block; margin-left: 5px; vertical-align: -4px;"></i>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            list.innerHTML = html;
+            console.log('Leaderboard HTML updated');
+            lucide.createIcons();
+        }
+
+        function showAlert(elementId, message, type) {
+            const alertBox = document.getElementById(elementId);
+            if (!alertBox) return;
+            alertBox.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => {
+                alertBox.innerHTML = '';
+            }, 5000);
+        }
     </script>
+    
+    <!-- Webhook Guide Modal -->
+    <div id="webhookGuideModal" class="modal">
+        <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+            <button class="modal-close" onclick="closeWebhookGuide()">&times;</button>
+            <h2 style="text-align: center; margin-bottom: 30px;"><i data-lucide="book-open" style="width: 24px; height: 24px; display: inline; margin-right: 10px;"></i> How to Get Your Discord Webhook</h2>
+            
+            <!-- Prerequisites -->
+            <div style="background: rgba(102, 126, 234, 0.1); border-left: 4px solid var(--primary); padding: 20px; margin-bottom: 30px; border-radius: 8px;">
+                <h3 style="margin-top: 0; color: var(--primary);"><i data-lucide="alert-circle" style="width: 20px; height: 20px; display: inline; margin-right: 8px;"></i> Prerequisites</h3>
+                <ul style="margin: 15px 0; padding-left: 25px;">
+                    <li style="margin: 8px 0;"><strong>You must have a Discord server</strong></li>
+                    <li style="margin: 8px 0;"><strong>You need the "Manage Webhooks" permission</strong> within that server</li>
+                </ul>
+            </div>
+            
+            <!-- Step by Step Guide -->
+            <div>
+                <h3 style="color: var(--primary); margin-bottom: 20px;"><i data-lucide="steps" style="width: 20px; height: 20px; display: inline; margin-right: 8px;"></i> Step-By-Step Guide</h3>
+                
+                <div style="margin-bottom: 25px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                        <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: var(--primary); border-radius: 50%; font-weight: bold; margin-right: 12px; flex-shrink: 0;">1</span>
+                        <h4 style="margin: 0;"><strong>Open Server Settings</strong></h4>
+                    </div>
+                    <p style="margin-left: 44px; opacity: 0.85;">In Discord, click the dropdown arrow next to your server name in the top left corner, then select <strong>Server Settings</strong></p>
+                    <a href="https://i.ibb.co/zH85J3Nc/1.jpg" target="_blank" style="margin-left: 44px; display: block; margin-top: 10px;">
+                        <img src="https://i.ibb.co/zH85J3Nc/1.jpg" alt="Step 1" style="max-width: 100%; border-radius: 8px; border: 1px solid rgba(102, 126, 234, 0.3); cursor: pointer; transition: transform 0.2s;">
+                    </a>
+                </div>
+                
+                <div style="margin-bottom: 25px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                        <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: var(--primary); border-radius: 50%; font-weight: bold; margin-right: 12px; flex-shrink: 0;">2</span>
+                        <h4 style="margin: 0;"><strong>Go to Integrations</strong></h4>
+                    </div>
+                    <p style="margin-left: 44px; opacity: 0.85;">In the left-hand menu, scroll down and click on the <strong>Integrations</strong> tab (or Apps > Integrations)</p>
+                    <a href="https://i.ibb.co/KcC7p2ms/2.jpg" target="_blank" style="margin-left: 44px; display: block; margin-top: 10px;">
+                        <img src="https://i.ibb.co/KcC7p2ms/2.jpg" alt="Step 2" style="max-width: 100%; border-radius: 8px; border: 1px solid rgba(102, 126, 234, 0.3); cursor: pointer; transition: transform 0.2s;">
+                    </a>
+                </div>
+                
+                <div style="margin-bottom: 25px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                        <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: var(--primary); border-radius: 50%; font-weight: bold; margin-right: 12px; flex-shrink: 0;">3</span>
+                        <h4 style="margin: 0;"><strong>Create a New Webhook</strong></h4>
+                    </div>
+                    <p style="margin-left: 44px; opacity: 0.85;">Click the <strong>Create Webhook</strong> button. If you already have webhooks, you might need to click <strong>View Webhooks</strong> first, then <strong>New Webhook</strong></p>
+                </div>
+                
+                <div style="margin-bottom: 25px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                        <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: var(--primary); border-radius: 50%; font-weight: bold; margin-right: 12px; flex-shrink: 0;">4</span>
+                        <h4 style="margin: 0;"><strong>Customize Your Webhook</strong></h4>
+                    </div>
+                    <p style="margin-left: 44px; opacity: 0.85;">
+                        <strong>Name:</strong> Give your webhook a descriptive name (e.g., "Crusty Notifications")<br>
+                        <strong>Channel:</strong> Select the specific text channel where the webhook should post messages<br>
+                        <strong>Avatar:</strong> Optionally change the profile picture for the webhook bot
+                    </p>
+                </div>
+                
+                <div style="margin-bottom: 25px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                        <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: var(--primary); border-radius: 50%; font-weight: bold; margin-right: 12px; flex-shrink: 0;">5</span>
+                        <h4 style="margin: 0;"><strong>Copy the Webhook URL</strong></h4>
+                    </div>
+                    <p style="margin-left: 44px; opacity: 0.85;">Once satisfied, click the <strong>Copy Webhook URL</strong> button. The URL will be copied to your clipboard</p>
+                    <a href="https://i.ibb.co/q3rDcPrX/3.png" target="_blank" style="margin-left: 44px; display: block; margin-top: 10px;">
+                        <img src="https://i.ibb.co/q3rDcPrX/3.png" alt="Step 5" style="max-width: 100%; border-radius: 8px; border: 1px solid rgba(102, 126, 234, 0.3); cursor: pointer; transition: transform 0.2s;">
+                    </a>
+                </div>
+                
+                <div style="margin-bottom: 25px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                        <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: var(--primary); border-radius: 50%; font-weight: bold; margin-right: 12px; flex-shrink: 0;">6</span>
+                        <h4 style="margin: 0;"><strong>Save Changes & Paste URL Here</strong></h4>
+                    </div>
+                    <p style="margin-left: 44px; opacity: 0.85;">Click <strong>Save</strong> to finalize the webhook, then paste the copied URL into the webhook field in our generator!</p>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(102, 126, 234, 0.2);">
+                <button class="btn btn-primary" onclick="closeWebhookGuide()" style="padding: 12px 30px;">
+                    <i data-lucide="check" style="width: 18px; height: 18px; display: inline; margin-right: 8px;"></i> Got It!
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Webhook Modal -->
+    <div id="editWebhookModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeEditModal()">&times;</button>
+            <h2><i data-lucide="edit-2" style="width: 20px; height: 20px; display: inline; margin-right: 10px;"></i> Edit Webhook</h2>
+            <div id="editWebhookAlert" style="margin-bottom: 20px;"></div>
+            <div class="form-group">
+                <label>New Discord Webhook URL *</label>
+                <input type="url" id="newWebhookInput" placeholder="https://discord.com/api/webhooks/..." required>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 25px;">
+                <button class="btn btn-primary" onclick="saveWebhookChanges()" style="flex: 1;"><i data-lucide="save" style="width: 16px; height: 16px; display: inline-block; margin-right: 5px; vertical-align: -2px;"></i> Save Changes</button>
+                <button class="btn btn-secondary" onclick="closeEditModal()" style="flex: 1;"><i data-lucide="x" style="width: 16px; height: 16px; display: inline-block; margin-right: 5px; vertical-align: -2px;"></i> Cancel</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
