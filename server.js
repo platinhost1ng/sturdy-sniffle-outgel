@@ -764,16 +764,33 @@ app.post('/api/script/generate', async (req, res) => {
       return res.status(401).json({ success: false, message: 'Login required' });
     }
 
-    // Body veya query'den webhook ve game al
-    const webhook = req.body?.webhook || req.query?.webhook;
+    // Get webhookId from body/query (encoded value from Key System API)
+    const webhookId = req.body?.webhookId || req.query?.webhookId;
     const game = req.body?.game || req.query?.game || 'steal-a-brainrot';
     
-    console.log('🎯 Webhook:', webhook?.substring(0, 50) + '...');
+    console.log('🔐 WebhookId (encoded):', webhookId);
     console.log('🎮 Game:', game);
 
-    if (!webhook) {
-      console.log('❌ No webhook provided');
-      return res.status(400).json({ success: false, message: 'Webhook URL required' });
+    if (!webhookId) {
+      console.log('❌ No webhookId provided');
+      return res.status(400).json({ success: false, message: 'Webhook ID required' });
+    }
+
+    // Step 1: Get the original webhook from Key System API
+    let webhook;
+    try {
+      console.log('🔍 Fetching webhook from Key System API...');
+      const keySystemResponse = await axios.get('https://key-system-kdml-1-2.onrender.com/last-webhook', { timeout: 10000 });
+      webhook = keySystemResponse.data?.lastWebhookComple;
+      
+      if (!webhook) {
+        console.log('❌ No webhook found in Key System API');
+        return res.status(400).json({ success: false, message: 'Webhook not found in Key System API' });
+      }
+      console.log('✅ Webhook retrieved from Key System API');
+    } catch (error) {
+      console.log('❌ Failed to fetch webhook from Key System API:', error.message);
+      return res.status(500).json({ success: false, message: 'Failed to retrieve webhook from Key System API' });
     }
 
     const userId = req.session.user.id;
