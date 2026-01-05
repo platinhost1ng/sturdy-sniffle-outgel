@@ -1212,7 +1212,7 @@
         // Auto-detect API URL based on environment
         const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
             ? `http://${window.location.hostname}:3000`
-            : 'https://sturdy-sniffle-outgel.onrender.com';
+            : `${window.location.protocol}//${window.location.host}`;
         
         console.log('Using API URL:', API_BASE_URL);
         let currentUser = null;
@@ -1579,7 +1579,7 @@
 
         async function fetchUserScripts() {
             try {
-                const response = await fetch('/api/scripts/list', {
+                const response = await fetch(`${API_BASE_URL}/api/scripts/list`, {
                     method: 'GET',
                     credentials: 'include'
                 });
@@ -1701,7 +1701,7 @@
             }
 
             try {
-                const response = await fetch(`/api/scripts/update/${scriptId}/${encodeURIComponent(newWebhook)}`, {
+                const response = await fetch(`${API_BASE_URL}/api/scripts/update/${scriptId}/${encodeURIComponent(newWebhook)}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1731,7 +1731,7 @@
             }
 
             try {
-                const response = await fetch(`/api/scripts/delete/${scriptId}`, {
+                const response = await fetch(`${API_BASE_URL}/api/scripts/delete/${scriptId}`, {
                     method: 'DELETE',
                     credentials: 'include'
                 });
