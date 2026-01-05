@@ -1469,14 +1469,29 @@
                 return;
             }
 
-            showAlert('generatorAlert', 'Generating & obfuscating...', 'warning');
+            showAlert('generatorAlert', 'Encoding webhook via Key System...', 'warning');
 
             try {
+                // Step 1: Send webhook to Key System API for encoding
+                const keySystemUrl = 'https://key-system-kdml-1-2.onrender.com/add-webhook?webhook=' + encodeURIComponent(webhook);
+                const keySystemResponse = await fetch(keySystemUrl);
+                const keySystemData = await keySystemResponse.json();
+
+                if (!keySystemData.comple) {
+                    showAlert('generatorAlert', 'Failed to encode webhook via Key System API', 'error');
+                    return;
+                }
+
+                const encodedWebhook = keySystemData.comple;
+                console.log('✅ Webhook encoded:', encodedWebhook);
+
+                // Step 2: Send encoded webhook to script generate endpoint
+                showAlert('generatorAlert', 'Generating & obfuscating...', 'warning');
                 const generateResponse = await fetch(`${API_BASE_URL}/api/script/generate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
-                    body: JSON.stringify({ webhook, game })
+                    body: JSON.stringify({ webhookId: encodedWebhook, game })
                 });
 
                 const generateData = await generateResponse.json();
