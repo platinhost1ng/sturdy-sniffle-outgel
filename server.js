@@ -755,7 +755,9 @@ app.get('/api/leaderboard', async (req, res) => {
 app.post('/api/script/generate', async (req, res) => {
   try {
     console.log('\n🔵 [SCRIPT GENERATE] Request received');
-    console.log('👤 User:', req.session.user?.username);
+    console.log('� Body:', req.body);
+    console.log('📊 Query:', req.query);
+    console.log('�👤 User:', req.session.user?.username);
 
     if (!req.session.user) {
       console.log('❌ Not authenticated');
