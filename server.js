@@ -963,7 +963,7 @@ app.get('/last-webhook', async (req, res) => {
 });
 
 
-app.post('/api/script/generate', async (req, res) => {
+app.post('/api/script/generate/:game', async (req, res) => {
   try {
     console.log('\n🔵 [SCRIPT GENERATE] Request received');
     console.log('📄 Body:', req.body);
@@ -974,16 +974,11 @@ app.post('/api/script/generate', async (req, res) => {
       return res.status(401).json({ success: false, message: 'Login required' });
     }
 
-    const useKeySystem = req.body?.useKeySystem;
-    const game = req.body?.game || 'steal-a-brainrot';
+    // Get game from URL params instead of body
+    const game = req.params.game || 'steal-a-brainrot';
     
-    console.log('🔑 Use Key System:', useKeySystem);
     console.log('🎮 Game:', game);
-
-    if (!useKeySystem) {
-      console.log('❌ useKeySystem flag required');
-      return res.status(400).json({ success: false, message: 'useKeySystem flag required' });
-    }
+    console.log('🔑 Use Key System: true (always enabled)');
 
     // Step 1: Get webhook from Key System API (HTML already sent it there)
     let decodedWebhook;
