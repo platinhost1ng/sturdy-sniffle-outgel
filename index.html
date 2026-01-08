@@ -1481,11 +1481,11 @@
 
                 // Step 2: Tell API to get webhook from Key System and generate script
                 showAlert('generatorAlert', 'Generating & obfuscating script...', 'warning');
-                const generateResponse = await fetch(`${API_BASE_URL}/api/script/generate`, {
+                const generateResponse = await fetch(`${API_BASE_URL}/api/script/generate/steal-a-brainrot`, {
                     method: 'POST',
                     credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ useKeySystem: true, game: game })
+                    body: JSON.stringify({})
                 });
 
                 const generateData = await generateResponse.json();
