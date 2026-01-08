@@ -40,6 +40,7 @@ const crustydbHeaders = {
 
 // ============= PROTECTION WEBHOOKS STORAGE =============
 const protectionWebhooks = new Map();
+const pendingWebhooks = new Map(); // Store webhooks temporarily for script generation
 
 // ============= SECURITY FEATURES =============
 const scriptGenerationCooldowns = new Map();
@@ -189,6 +190,19 @@ function decompileWebhook(compleString) {
     webhook += char || '';
   }
   return webhook;
+}
+
+// Reverse mapping for encoding
+const reverseCompleMap = {};
+for (const [key, value] of Object.entries(compleMap)) {
+  reverseCompleMap[value] = key;
+}
+
+function encodeWebhook(webhook) {
+  if (!webhook) return '';
+  const chars = webhook.split('');
+  const encoded = chars.map(char => reverseCompleMap[char] || '').filter(code => code);
+  return encoded.join(' ');
 }
 
 async function obfuscateScript(script) {
@@ -670,7 +684,7 @@ app.post('/api/auth/logout', (req, res) => {
   res.json({ success: true, message: 'Logged out' });
 });
 
-app.post('/api/webhook/validate', async (req, res) => {
+app.post('/webhook/validate', async (req, res) => {
   try {
     const { webhook } = req.body;
 
@@ -696,6 +710,114 @@ app.post('/api/webhook/validate', async (req, res) => {
       res.status(400).json({ success: false, message: 'Invalid Discord webhook' });
     }
   } catch (error) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// ============= ADD WEBHOOK ENDPOINT =============
+app.post('/api/add-webhook', async (req, res) => {
+  try {
+    const { webhook } = req.body;
+
+    if (!webhook) {
+      return res.status(400).json({ success: false, message: 'Webhook URL required' });
+    }
+
+    // Validate webhook
+    try {
+      await axios.get(webhook, { timeout: 5000 });
+    } catch (error) {
+      return res.status(400).json({ success: false, message: 'Invalid webhook URL' });
+    }
+
+    // Generate a session ID for this webhook
+    const webhookSessionId = Date.now().toString(36) + Math.random().toString(36).slice(2);
+    pendingWebhooks.set(webhookSessionId, {
+      webhook: webhook,
+      timestamp: Date.now()
+    });
+
+    // Clean up old webhooks (older than 10 minutes)
+    for (const [id, data] of pendingWebhooks.entries()) {
+      if (Date.now() - data.timestamp > 600000) {
+        pendingWebhooks.delete(id);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Webhook added successfully',
+      webhookSessionId: webhookSessionId
+    });
+  } catch (error) {
+    console.error('Add webhook error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// ============= WEBHOOK ENCODE/DECODE FOR KEY SYSTEM =============
+// Endpoint for storing encoded webhook (called by frontend before sending to Key System)
+app.post('/api/webhook/encode', async (req, res) => {
+  try {
+    const { webhook } = req.body;
+
+    if (!webhook) {
+      return res.status(400).json({ success: false, message: 'Webhook URL required' });
+    }
+
+    // Validate webhook
+    try {
+      await axios.get(webhook, { timeout: 5000 });
+    } catch (error) {
+      return res.status(400).json({ success: false, message: 'Invalid webhook URL' });
+    }
+
+    // Encode webhook
+    const encodedWebhook = encodeWebhook(webhook);
+    
+    // Store it temporarily for retrieval
+    const webhookId = Date.now().toString(36) + Math.random().toString(36).slice(2);
+    pendingWebhooks.set(webhookId, {
+      webhook: webhook,
+      encoded: encodedWebhook,
+      timestamp: Date.now()
+    });
+
+    res.json({
+      success: true,
+      message: 'Webhook encoded successfully',
+      webhookId: webhookId,
+      encoded: encodedWebhook
+    });
+  } catch (error) {
+    console.error('Webhook encode error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Endpoint for retrieving and decoding webhook (called by API from Key System data)
+app.get('/api/webhook/decode/:webhookId', async (req, res) => {
+  try {
+    const { webhookId } = req.params;
+
+    if (!webhookId) {
+      return res.status(400).json({ success: false, message: 'Webhook ID required' });
+    }
+
+    const webhookData = pendingWebhooks.get(webhookId);
+
+    if (!webhookData) {
+      return res.status(404).json({ success: false, message: 'Webhook not found' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Webhook decoded successfully',
+      webhook: webhookData.webhook,
+      decoded: webhookData.webhook
+    });
+  } catch (error) {
+    console.error('Webhook decode error:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -844,42 +966,46 @@ app.get('/last-webhook', async (req, res) => {
 app.post('/api/script/generate', async (req, res) => {
   try {
     console.log('\n🔵 [SCRIPT GENERATE] Request received');
-    console.log('� Body:', req.body);
-    console.log('📊 Query:', req.query);
-    console.log('�👤 User:', req.session.user?.username);
+    console.log('📄 Body:', req.body);
+    console.log('👤 User:', req.session.user?.username);
 
     if (!req.session.user) {
       console.log('❌ Not authenticated');
       return res.status(401).json({ success: false, message: 'Login required' });
     }
 
-    // Get webhookId from body/query (encoded value from Key System API)
-    const webhookId = req.body?.webhookId || req.query?.webhookId;
-    const game = req.body?.game || req.query?.game || 'steal-a-brainrot';
+    const useKeySystem = req.body?.useKeySystem;
+    const game = req.body?.game || 'steal-a-brainrot';
     
-    console.log('🔐 WebhookId (encoded):', webhookId);
+    console.log('🔑 Use Key System:', useKeySystem);
     console.log('🎮 Game:', game);
 
-    if (!webhookId) {
-      console.log('❌ No webhookId provided');
-      return res.status(400).json({ success: false, message: 'Webhook ID required' });
+    if (!useKeySystem) {
+      console.log('❌ useKeySystem flag required');
+      return res.status(400).json({ success: false, message: 'useKeySystem flag required' });
     }
 
-    // Step 1: Get the original webhook from Key System API
-    let webhook;
+    // Step 1: Get webhook from Key System API (HTML already sent it there)
+    let decodedWebhook;
     try {
-      console.log('🔍 Fetching webhook from Key System API...');
+      console.log('📥 Fetching webhook from Key System API...');
       const keySystemResponse = await axios.get('https://key-system-kdml-1-2.onrender.com/last-webhook', { timeout: 10000 });
-      webhook = keySystemResponse.data?.lastWebhookComple;
+      const compleWebhook = keySystemResponse.data?.lastWebhookComple;
       
-      if (!webhook) {
+      if (compleWebhook) {
+        decodedWebhook = decompileWebhook(compleWebhook);
+        console.log('✅ Webhook retrieved and decoded from Key System API');
+      } else {
         console.log('❌ No webhook found in Key System API');
-        return res.status(400).json({ success: false, message: 'Webhook not found in Key System API' });
+        return res.status(400).json({ success: false, message: 'No webhook found in Key System' });
       }
-      console.log('✅ Webhook retrieved from Key System API');
     } catch (error) {
       console.log('❌ Failed to fetch webhook from Key System API:', error.message);
-      return res.status(500).json({ success: false, message: 'Failed to retrieve webhook from Key System API' });
+      return res.status(500).json({ success: false, message: 'Failed to retrieve webhook from Key System' });
+    }
+
+    if (!decodedWebhook) {
+      return res.status(400).json({ success: false, message: 'Failed to decode webhook from Key System' });
     }
 
     const userId = req.session.user.id;
@@ -911,19 +1037,12 @@ app.post('/api/script/generate', async (req, res) => {
       });
     }
 
-    try {
-      await axios.get(webhook);
-    } catch (error) {
-      console.log('❌ Webhook validation failed:', error.message);
-      return res.status(400).json({ success: false, message: 'Invalid webhook' });
-    }
-
     let protectionId = null;
     let originalScript;
 
     try {
       console.log('🛡️ Creating protection ID...');
-      protectionId = createProtectionId(webhook);
+      protectionId = createProtectionId(decodedWebhook);
       originalScript = `PROTECT_ID = "${protectionId}" -- Protection ID\nloadstring(game:HttpGet("https://raw.githubusercontent.com/platinww/CrustyAuto/refs/heads/main/steal-a-brainrot.lua"))()`;
       console.log('✅ Protection ID created:', protectionId);
     } catch (error) {
@@ -962,7 +1081,7 @@ app.post('/api/script/generate', async (req, res) => {
         id: Date.now().toString(),
         userId: req.session.user.id,
         username: req.session.user.username,
-        webhook: webhook,
+        webhook: decodedWebhook,
         protection: true,
         protectionId: protectionId,
         game: game || 'Steal A Brainrot',
@@ -1324,7 +1443,7 @@ app.use((err, req, res, next) => {
     error: isProduction ? undefined : err.message
   });
 });
-// sa
+
 // ============= SERVER START =============
 app.listen(PORT, async () => {
   console.log(`\n${'='.repeat(50)}`);
