@@ -178,18 +178,49 @@ const compleMap = {
   'K21': 'R', 'K22': 'S', 'K23': 'Ş', 'K24': 'T', 'K25': 'U',
   'K26': 'Ü', 'K27': 'V', 'K28': 'Y', 'K29': 'Z',
   'X90': '0', 'X91': '1', 'X92': '2', 'X93': '3', 'X94': '4',
-  'X95': '5', 'X96': '6', 'X97': '7', 'X98': '8', 'X99': '9'
+  'X95': '5', 'X96': '6', 'X97': '7', 'X98': '8', 'X99': '9',
+  // URL characters
+  'S01': ':', 'S02': '/', 'S03': '-', 'S04': '_', 'S05': '.',
+  'S06': '?', 'S07': '=', 'S08': '&', 'S09': '%', 'S10': '+',
+  // Lowercase letters for webhook tokens
+  'L01': 'a', 'L02': 'b', 'L03': 'c', 'L04': 'd', 'L05': 'e',
+  'L06': 'f', 'L07': 'g', 'L08': 'h', 'L09': 'i', 'L10': 'j',
+  'L11': 'k', 'L12': 'l', 'L13': 'm', 'L14': 'n', 'L15': 'o',
+  'L16': 'p', 'L17': 'q', 'L18': 'r', 'L19': 's', 'L20': 't',
+  'L21': 'u', 'L22': 'v', 'L23': 'w', 'L24': 'x', 'L25': 'y',
+  'L26': 'z'
 };
 
 function decompileWebhook(compleString) {
   if (!compleString) return '';
+  console.log('🔍 Decoding webhook:', compleString);
+  
   const parts = compleString.split(' ');
   let webhook = '';
+  
   for (const part of parts) {
-    const char = compleMap[part];
-    webhook += char || '';
+    if (part.startsWith('MISS_')) {
+      // Handle placeholder for missing characters
+      const charCode = parseInt(part.replace('MISS_', ''));
+      const char = String.fromCharCode(charCode);
+      console.log(`🔧 Restoring missing char: '${char}' from ${part}`);
+      webhook += char;
+    } else {
+      const char = compleMap[part];
+      if (char) {
+        webhook += char;
+      } else {
+        console.log(`❌ Unknown code: '${part}'`);
+      }
+    }
   }
-  return webhook;
+  
+  console.log('🔍 Decoded before cleanup:', webhook);
+  
+  // Convert to lowercase and remove spaces
+  const result = webhook.toLowerCase().replace(/\s+/g, '');
+  console.log('🔍 Final decoded result:', result);
+  return result;
 }
 
 // Reverse mapping for encoding
@@ -200,9 +231,35 @@ for (const [key, value] of Object.entries(compleMap)) {
 
 function encodeWebhook(webhook) {
   if (!webhook) return '';
+  console.log('🔍 Encoding webhook:', webhook);
+  
   const chars = webhook.split('');
-  const encoded = chars.map(char => reverseCompleMap[char] || '').filter(code => code);
-  return encoded.join(' ');
+  const encoded = chars.map(char => {
+    // Check if character has encoding
+    const encodedChar = reverseCompleMap[char];
+    if (encodedChar) {
+      console.log(`✅ '${char}' -> '${encodedChar}'`);
+      return encodedChar;
+    }
+    
+    // Try uppercase version for lowercase letters
+    const upperChar = char.toUpperCase();
+    const encodedUpper = reverseCompleMap[upperChar];
+    if (encodedUpper) {
+      console.log(`✅ '${char}' (as '${upperChar}') -> '${encodedUpper}'`);
+      return encodedUpper;
+    }
+    
+    // Log missing characters
+    console.log(`❌ Missing encoding for: '${char}' (ASCII: ${char.charCodeAt(0)})`);
+    
+    // Return placeholder for missing characters instead of empty string
+    return `MISS_${char.charCodeAt(0)}`;
+  });
+  
+  const result = encoded.join(' ');
+  console.log('🔍 Encoded result:', result);
+  return result;
 }
 
 async function obfuscateScript(script) {
