@@ -205,13 +205,16 @@ function decompileWebhook(compleString) {
       const char = String.fromCharCode(charCode);
       console.log(`🔧 Restoring missing char: '${char}' from ${part}`);
       webhook += char;
-    } else {
+    } else if (compleMap[part]) {
+      // Handle encoded characters (K10, X91, etc.)
       const char = compleMap[part];
-      if (char) {
-        webhook += char;
-      } else {
-        console.log(`❌ Unknown code: '${part}'`);
-      }
+      webhook += char;
+    } else if (part.length === 1) {
+      // Handle literal characters (:, /, ., -, etc.) that weren't encoded
+      console.log(`🔧 Using literal character: '${part}'`);
+      webhook += part;
+    } else {
+      console.log(`❌ Unknown code: '${part}'`);
     }
   }
   
